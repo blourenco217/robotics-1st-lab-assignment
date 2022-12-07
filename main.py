@@ -3,6 +3,8 @@ import serial
 import time
 import datetime
 
+from actions import action
+
 # This function listens the serial port for wait_time seconds
 # waiting for ASCII characters to be sent by the robot
 # It returns the string of characters
@@ -35,7 +37,8 @@ def main():
     # this instruction in case you are using a Linux OS)
     # (you must check in your computer which ports are available are, if necessary,
     # replace COM4 with the adequate COM)
-    ser = serial.Serial('COM4', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+    # /dev/tty.UEBOOM2-LWACP
+    ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
     print("COM port in use: {0}".format(ser.name))
 
     print("Homing the robot (if necessary)")
@@ -60,6 +63,10 @@ def main():
     time.sleep(0.5)
     read_and_wait(ser,2)
 
+    path = action()
+    path.moveto_waypoint(b'P1')
+
+
     # closing and housekeeping
     ser.close()
 
@@ -67,5 +74,5 @@ def main():
     
 
 ########################################################################
-if _name_ == "_main_":
+if __name__ == '__main__':
     main()
