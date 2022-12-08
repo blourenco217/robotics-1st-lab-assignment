@@ -29,31 +29,44 @@ class action(object):
 
     def __init__(self):
         self.ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        # erase memory
+        # home position
     
 
     def calibrate(self):
         """ center pen position in referencial origin """
-        # create a position called origin
+        self.ser.write(b'SETP ORI = 0\r'), time.sleep(0.5)
+        self.ser.write(b'SETPVC ORI X 5208\r'), time.sleep(0.5)
+        self.ser.write(b'SETPVC ORI Y 538\r'), time.sleep(0.5)
+        self.ser.write(b'SETPVC ORI Z -913\r'), time.sleep(0.5)
+        self.ser.write(b'SETPVC ORI P -895\r'), time.sleep(0.5)
+        self.ser.write(b'SETPVC ORI R -201\r'), time.sleep(0.5)
+        self.ser.write (b'MOVED ORI\r')
+        time.sleep(0.5), read_and_wait(self.ser,2)
 
-    def add_waypoint(self, waypoint):
-        self.ser.write(b'TEACHR ORIGIN {}'.format(waypoint))
-        time.sleep(0.5), read_and_wait(self.ser,2)
-        self.ser.write(b'HERE P\r')   # rename position/ waypoint
-        time.sleep(0.5), read_and_wait(self.ser,2)
+    def add_waypoint(self, waypoint, reference, position):
+        """ find first point in paper to start drawing """
+        self.ser.write(b'DEFP ' + waypoint + b'\r'), time.sleep(0.5)
+        self.ser.write(b'TEACHR ' + waypoint + b' ' + reference + b'\r'), time.sleep(0.5) 
+        self.ser.write(position[0] + b'\r'), time.sleep(0.5) # x relative
+        self.ser.write(position[1] + b'\r'), time.sleep(0.5) # y relative
+        self.ser.write(position[2] + b'\r'), time.sleep(0.5) # z relative
+        self.ser.write(position[3] + b'\r'), time.sleep(0.5) # p relative
+        self.ser.write(position[4] + b'\r'), time.sleep(0.5) # r relative
+
         
     def moveto_waypoint(self, waypoint):
-        self.ser.write(b'MOVE ' + waypoint + b'\r')
-        time.sleep(0.5)
-        read_and_wait(self.ser,2)
+        self.ser.write(b'MOVED ' + waypoint + b'\r')
+        time.sleep(0.5), read_and_wait(self.ser,2)
 
     def moveto_waypoint_linear(self, waypoint):
-        self.ser.write(b'MOVEL P\r')
+        self.ser.write(b'MOVELD ' + waypoint + b'\r')
         time.sleep(0.5), read_and_wait(self.ser,2)
 
     def moveto_waypoint_circular(self, waypoint, pit_waypoint, velocity = 20):
-        self.ser.write(b'SPEED {}\r'.format(velocity))
+        self.ser.write(b'SPEED '+ velocity + b'\r')
         time.sleep(0.5), read_and_wait(self.ser,2)
-        self.ser.write(b'MOVEC {} {}\r'.format(waypoint, pit_waypoint))
+        self.ser.write(b'MOVECD ' + waypoint + pit_waypoint + b'\r')
         time.sleep(0.5), read_and_wait(self.ser,2)
 
         self.ser.write(b'SPEED 50') # reset speed

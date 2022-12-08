@@ -53,18 +53,32 @@ def main():
     # as terminal console)
     ############################################################################
 
-    print('going to point P1')
-    ser.write(b'MOVE P1\r')
-    time.sleep(0.5)
-    read_and_wait(ser,2)
 
-    print('going to point P2')
-    ser.write(b'MOVE P2\r')
-    time.sleep(0.5)
-    read_and_wait(ser,2)
+    # print('going to point P1')
+    # ser.write(b'MOVE P1\r')
+    # time.sleep(0.5)
+    # read_and_wait(ser,2)
+
+    # print('going to point P2')
+    # ser.write(b'MOVE P2\r')
+    # time.sleep(0.5)
+    # read_and_wait(ser,2)
 
     path = action()
-    path.moveto_waypoint(b'P1')
+    path.calibrate()
+    z_offset = -100
+    position = (500,500,-100,0,0)
+    path.add_waypoint(b'SQ1', b'ORI', position) # add waypoint ISA from a distance (0,0,0,0,0) from ORI
+    path.moveto_waypoint(b'SQ1')
+    position = (-500,500,0,0,0)
+    path.add_waypoint(b'SQ2', b'ORI', position) 
+    path.moveto_waypoint(b'SQ2')
+    position = (-500,-500,0,0,0)
+    path.add_waypoint(b'SQ3', b'ORI', position)
+    path.moveto_waypoint(b'SQ3')
+    position = (500,-500,0,0,0)
+    path.add_waypoint(b'SQ4', b'ORI', position) 
+    path.moveto_waypoint(b'SQ4')
 
 
     # closing and housekeeping
