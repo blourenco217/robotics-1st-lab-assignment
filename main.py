@@ -2,6 +2,7 @@
 import serial
 import time
 import datetime
+import numpy as np
 
 from actions import action
 
@@ -65,7 +66,9 @@ def main():
     # read_and_wait(ser,2)
 
 
-    origin = (5386, 963, 1499, -845, -201)
+    #origin = (5386, 963, 1499, -845, -201)
+    origin = np.array([5386, 963, 1499, -845, -201])
+
     path = action()
 
     path.calibrate(origin)
@@ -73,7 +76,7 @@ def main():
     #pvect = ([500,-500,][-500,500])
     #path.move_path(pvect)
     #pathpygame.examples.vgrade.main()
-    pvect = ((500,500,-283),(500,-500,0),(-500,-500,0),(-500,500,0))
+    pvect = np.array([[500,500,-283],[500,-500,0],[-500,-500,0],[-500,500,0]])
     path.move_path(pvect, origin)    # path.add_waypoint(b'SQ1', b'ORI', position) # add waypoint ISA from a distance (0,0,0,0,0) from ORI
     # path.moveto_waypoint(b'SQ1')
     # position = (-500,500,-270,0,0)
