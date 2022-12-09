@@ -38,10 +38,10 @@ def main():
     # (you must check in your computer which ports are available are, if necessary,
     # replace COM4 with the adequate COM)
     # /dev/tty.UEBOOM2-LWACP
-    ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
-    print("COM port in use: {0}".format(ser.name))
+    # ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+    # print("COM port in use: {0}".format(ser.name))
 
-    print("Homing the robot (if necessary)")
+    # print("Homing the robot (if necessary)")
     #ser.write(b'home\r')
     #time.sleep(180) # homing takes a few minutes ...
 
@@ -64,25 +64,31 @@ def main():
     # time.sleep(0.5)
     # read_and_wait(ser,2)
 
+
+    origin = (5386, 963, 1499, -845, -201)
     path = action()
-    path.calibrate()
+
+    path.calibrate(origin)
     z_offset = -100
-    position = (500,500,-100,0,0)
-    path.add_waypoint(b'SQ1', b'ORI', position) # add waypoint ISA from a distance (0,0,0,0,0) from ORI
-    path.moveto_waypoint(b'SQ1')
-    position = (-500,500,0,0,0)
-    path.add_waypoint(b'SQ2', b'ORI', position) 
-    path.moveto_waypoint(b'SQ2')
-    position = (-500,-500,0,0,0)
-    path.add_waypoint(b'SQ3', b'ORI', position)
-    path.moveto_waypoint(b'SQ3')
-    position = (500,-500,0,0,0)
-    path.add_waypoint(b'SQ4', b'ORI', position) 
-    path.moveto_waypoint(b'SQ4')
+    #pvect = ([500,-500,][-500,500])
+    #path.move_path(pvect)
+    #pathpygame.examples.vgrade.main()
+    pvect = ((500,500,-283),(500,-500,0),(-500,-500,0),(-500,500,0))
+    path.move_path(pvect, origin)    # path.add_waypoint(b'SQ1', b'ORI', position) # add waypoint ISA from a distance (0,0,0,0,0) from ORI
+    # path.moveto_waypoint(b'SQ1')
+    # position = (-500,500,-270,0,0)
+    # path.add_waypoint(b'SQ2', b'ORI', position) 
+    # path.moveto_waypoint(b'SQ2')
+    # position = (-500,-500,-270,0,0)
+    # path.add_waypoint(b'SQ3', b'ORI', position)
+    # path.moveto_waypoint(b'SQ3')
+    # position = (500,-500,-270,0,0)
+    # path.add_waypoint(b'SQ4', b'ORI', position) 
+    # path.moveto_waypoint(b'SQ4')
 
 
     # closing and housekeeping
-    ser.close()
+    # ser.close()
 
     print('housekeeping completed - exiting')
     

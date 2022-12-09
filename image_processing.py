@@ -1,10 +1,17 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import time
+import math
+import scipy.spatial.distance as distance
 
 class processing(object):
-    def __init__(self, file_name = 'images/square.png'):
-        self.image = cv2.imread(file_name)
+    def __init__(self, file_name = 'images/test_draw_1.png'):
+        try:
+            self.image = cv2.imread(file_name)
+        except:
+            print(ValueError + 'CANNOT READ IMAGE FILE\n')
+
 	
     def image2plot(self):
         scale_percent = 10 # percent of original size
@@ -179,6 +186,52 @@ class processing(object):
         
         plt.imshow(self.image, aspect="auto", cmap="gray")
         plt.show()
+    
+    def order_points(self, x, y):
+        points = x, y
+        dists =distance.pdist(points)
+        m=np.argsort(distance.squareform(dists))[:,1:]
+        order = [0,m[0,0]]
+        next_point = order[-1]
+        while len(order)<len(points):
+            row = m[next_point]
+            i = 0
+            while row[i] in order:
+                i += 1
+            order.append(row[i])
+            next_point = order[-1]
+        order.append(0)
+        ordered = points[order]
+
+        return x, y
+
+
+
+    def image_sampling(self):
+
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        _, self.image = cv2.threshold(self.image, 128, 255, cv2.THRESH_BINARY)
+        self.image = cv2.bitwise_not(self.image)
+        self.image = cv2.ximgproc.thinning(self.image)
+
+        y, x = np.where(np.array(self.image) == 255)
+        # print(np.array(sampling).shape)
+        x_sample = x[::200]
+        y_sample = y[::200]
+        x, y = self.order_points(x, y)
+        plt.imshow(self.image, aspect="auto", cmap="gray")
+        for i in range(np.size(x_sample)):
+            plt.scatter(x_sample[i], y_sample[i])
+            plt.pause(0.001)
+
+
+        
+        # for idx in sampling:
+        #     i, j = idx.ravel()
+        #     plt.scatter(i,j)
+        #     time.sleep(0.5)
+
+        plt.show()
         
 
 
@@ -189,28 +242,22 @@ class processing(object):
 
 
 p = processing()
-#p.hough_lines()
-corners = p.corner_detector()
-# p.hough_corner_detector()
-# p.detect_loose_end()
-
-file_name = 'images/square.png'
-image = cv2.imread(file_name)
-y_center, x_center = image.shape[0]/2, image.shape[1]/2
-
-x_r = []
-y_r = []
-
-for i in corners:
-    x, y = i.ravel()
-    x_r.append(x-x_center), y_r.append(y-y_center) 
-
-
-print(x_r, y_r)
+p.image_sampling()
 
 
 
 
 
-points = []
+# corners = p.corner_detector()
+# file_name = 'images/square.png'
+# image = cv2.imread(file_name)
+# y_center, x_center = image.shape[0]/2, image.shape[1]/2
 
+# x_r = []
+# y_r = []
+
+# for i in corners:
+#     x, y = i.ravel()
+#     x_r.append(x-x_center), y_r.append(y-y_center) 
+
+# print(x_r, y_r)
