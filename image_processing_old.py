@@ -188,41 +188,65 @@ class processing(object):
         plt.show()
     
     def order_points(self, x, y):
-        points = x, y
-        dists =distance.pdist(points)
-        m=np.argsort(distance.squareform(dists))[:,1:]
-        order = [0,m[0,0]]
-        next_point = order[-1]
-        while len(order)<len(points):
-            row = m[next_point]
-            i = 0
-            while row[i] in order:
-                i += 1
-            order.append(row[i])
-            next_point = order[-1]
-        order.append(0)
-        ordered = points[order]
-
         return x, y
-
-
 
     def image_sampling(self):
 
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         _, self.image = cv2.threshold(self.image, 128, 255, cv2.THRESH_BINARY)
+        # self.image = cv2.Canny(self.image,50,150,apertureSize=3)
         self.image = cv2.bitwise_not(self.image)
         self.image = cv2.ximgproc.thinning(self.image)
-
-        y, x = np.where(np.array(self.image) == 255)
-        # print(np.array(sampling).shape)
-        x_sample = x[::200]
-        y_sample = y[::200]
-        x, y = self.order_points(x, y)
         plt.imshow(self.image, aspect="auto", cmap="gray")
-        for i in range(np.size(x_sample)):
-            plt.scatter(x_sample[i], y_sample[i])
+        contours, hierarchy  = cv2.findContours(self.image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        print(np.array(contours).shape)
+        # self.image = cv2.drawContours(self.image, contours, -1, (0,255,75), 2)
+
+        contours = np.asarray(contours).reshape((17727, 2))
+        print(contours.shape)
+        # plt.scatter(contours[0], contours[1])
+
+        x = []
+        y = []
+        for i in range(17727):
+            # x, y = contours[i][0], contours[i][1]
+            # print(contours[i][0], contours[i][1])
+
+            x.append(contours[i][0])
+            y.append(contours[i][1])
+        
+        x = x[::100]
+        y = y[::100]
+        print(np.array(x).shape, np.array(y).shape)
+
+        for i in range(178):
+            plt.scatter(x[i], y[i])
             plt.pause(0.001)
+
+        plt.imshow(self.image, aspect="auto", cmap="gray")
+
+        # print(contours)
+        # contours = np.asarray(contours)
+        
+        # print(contours.shape)
+    
+        # for i in contours:
+
+        #     x, y = i.ravel()
+        #     plt.scatter(x, y)
+        #     plt.pause(0.001)
+
+        
+
+        # y, x = np.where(np.array(self.image) == 255)
+        # # print(np.array(sampling).shape)
+        # x = x[::200]
+        # y = y[::200]
+        # x, y = self.order_points(x, y)
+        # 
+        # for i in range(np.size(x)):
+        #     plt.scatter(x[i], y[i])
+        #     plt.pause(0.001)
 
 
         
