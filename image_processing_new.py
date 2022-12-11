@@ -19,23 +19,35 @@ class processing(object):
             print(ValueError + 'CANNOT READ IMAGE FILE\n')
     
     def sampling(self, x, y):
-        return x[::100], y[::100]
+        return x[::400], y[::400]
     
     def image2plot(self):
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         _, self.image = cv2.threshold(self.image, 110, 255, cv2.THRESH_BINARY)
-        contours, _ = cv2.findContours(self.image, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(self.image, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE) # tuple
         plt.imshow(self.image, aspect="auto", cmap="gray")
+
+        # l = max(contours, key=lambda coll: len(coll)) # find longest contour
+        # x = [i[:,0] for i in l]
+        # y = [i[:,1] for i in l]
+        # x, y = self.sampling(x,y)
+
+        # for i in range(len(x)):
+        #     plt.scatter(x[i], y[i])
+        #     plt.pause(0.01)
+        
+
+
         for contour in contours:
+            print('coucou')
             x = [i[:,0] for i in contour]
             y = [i[:,1] for i in contour]
 
-            x = x[::100]
-            y = y[::100]
+            x, y = self.sampling(x,y)
 
-            # print(len(x))
             for i in range(len(x)):
                 plt.scatter(x[i], y[i])
-                plt.pause(0.000001)
+                plt.pause(0.01)
 
         plt.show()
     
@@ -44,103 +56,48 @@ class processing(object):
         # self.image = cv2.bilateralFilter(self.image, 50, 50, 10)
         edged = cv2.Canny(self.image, 70, 250)
 
-        # a = plt.contour(edged)
-        # print(len(a.collections[0].get_paths()))
-        # plt.close()
-        # lines = list(dict.fromkeys(a.collections[0].get_paths()))
-        # for line in lines:
-        #     x = line.vertices[:,0]
-        #     y = line.vertices[:,1]
-        #     plt.scatter(x, y)
-        #     plt.pause(1)
-
-
-
-        #plot separated contour
-        # plt.subplot(1,3,3)
-        # plt.imshow(self.image, aspect="auto", cmap="gray")
-
-        # for i in range(1,len(a.allsegs[0]), 2):
-        #     x = a.allsegs[0][i][:,0]
-        #     y = a.allsegs[0][i][:,1]
-        #     x = x[::300]
-        #     y = y[::300]
-
-        #     for j in range(len(x)):
-        #         plt.scatter(x[j], y[j])
-        #         plt.pause(0.000001)
-            
-            # plt.plot(x,y)
-
         a = plt.contour(edged)
+        print(len(a.collections[0].get_paths()))
         plt.close()
-        plt.imshow(self.image, aspect="auto", cmap="gray")
-        x = a.allsegs[0][2][:,0]
-        y = a.allsegs[0][2][:,1]
-        x = x[::300]
-        y = y[::300]
-
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.000001)
+        lines = list(dict.fromkeys(a.collections[0].get_paths()))
+        for line in lines:
+            x = line.vertices[:,0]
+            y = line.vertices[:,1]
+            plt.scatter(x, y)
+            plt.pause(1)
         
-        x = a.allsegs[0][3][:,0]
-        y = a.allsegs[0][3][:,1]
-        x = x[::300]
-        y = y[::300]
-
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.000001)
-
         plt.show()
-        
-        # a = plt.contour(edged)
-        # plt.close()
-        # plt.imshow(self.image, aspect="auto", cmap="gray")
-        
 
-        # l = longest(a.allsegs[0])
-        # print(a.allsegs[0])
-        # x = l[:,0]
-        # y = l[:,0]
-        # x = x[::300]
-        # y = y[::300]
-
-        # for j in range(len(x)):
-        #     plt.scatter(x[j], y[j])
-        #     plt.pause(0.000001)
-        
-
-        # plt.show()
-
-    def anoother(self):
+    def contours_detector(self):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        _, self.image = cv2.threshold(self.image, 110, 255, cv2.THRESH_BINARY)
+        plt.imshow(self.image, aspect="auto", cmap="gray")
         edged = cv2.Canny(self.image, 70, 250)
 
         a = plt.contour(edged, levels=[1])
         print(len(a.allsegs[0]))
-        # plt.close()
-        # plt.imshow(self.image, aspect="auto", cmap="gray")
-        # x = a.allsegs[0][2][:,0]
-        # y = a.allsegs[0][2][:,1]
-        # x = x[::300]
-        # y = y[::300]
 
+        contours = a.allsegs[0]
+        
+        # l = max(contours, key=lambda coll: len(coll)) # find longest contour
+        # x = l[:,0]
+        # y = l[:,1]
+        # x, y = self.sampling(x,y)
         # for j in range(len(x)):
         #     plt.scatter(x[j], y[j])
-        #     plt.pause(0.000001)
-        
-        n_contour = 1
+        #     plt.pause(0.01)
 
-        x = a.allsegs[0][n_contour][:,0]
-        y = a.allsegs[0][n_contour][:,1]
-        x = x[::300]
-        y = y[::300]
 
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.000001)
+        plt.close()
+        contours.sort()
+        for i in range(len(contours)):
+            x = contours[i][:,0]
+            y = contours[i][:,1]
+            x, y = self.sampling(x,y)
+
+            for j in range(len(x)):
+                plt.scatter(x[j], y[j])
+                plt.pause(0.01)
 
         plt.show()
 
@@ -149,4 +106,4 @@ class processing(object):
 
 p = processing()
 # p.image2plot()
-p.anoother()
+p.contours_detector()

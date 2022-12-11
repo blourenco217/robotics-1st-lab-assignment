@@ -4,6 +4,7 @@ import numpy as np
 import time
 import math
 import scipy.spatial.distance as distance
+import random as rng
 
 class processing(object):
     def __init__(self, file_name = 'images/test_draw_1.png'):
@@ -41,20 +42,20 @@ class processing(object):
     def corner_detector(self):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
-        self.image= cv2.blur(self.image,(5,5))
+        # self.image= cv2.blur(self.image,(5,5))
 
-        scale_percent = 100 # percent of original size
-        width = int(self.image.shape[1] * scale_percent / 100)
-        height = int(self.image.shape[0] * scale_percent / 100)
-        dim = (width, height)
+        # scale_percent = 100 # percent of original size
+        # width = int(self.image.shape[1] * scale_percent / 100)
+        # height = int(self.image.shape[0] * scale_percent / 100)
+        # dim = (width, height)
 
-        self.image = cv2.resize(self.image, dim, interpolation = cv2.INTER_AREA)
+        # self.image = cv2.resize(self.image, dim, interpolation = cv2.INTER_AREA)
 
         _, self.image = cv2.threshold(self.image, 150, 255, cv2.THRESH_BINARY)
-        self.image = cv2.bitwise_not(self.image)
-        self.image = cv2.ximgproc.thinning(self.image)
+        # self.image = cv2.bitwise_not(self.image)
+        # self.image = cv2.ximgproc.thinning(self.image)
 
-        corners = cv2.goodFeaturesToTrack(self.image, 10,0.005,50)
+        corners = cv2.goodFeaturesToTrack(self.image, 1,0.005,50)
         corners = np.int0(corners)
 
         for i in corners:
@@ -266,13 +267,14 @@ class processing(object):
 
 
 p = processing()
-p.image_sampling()
+# p.image_sampling()
 
 
 
 
 
-# corners = p.corner_detector()
+corners = p.corner_detector()
+
 # file_name = 'images/square.png'
 # image = cv2.imread(file_name)
 # y_center, x_center = image.shape[0]/2, image.shape[1]/2

@@ -66,28 +66,26 @@ def main():
     # read_and_wait(ser,2)
 
 
-    #origin = (5386, 963, 1499, -845, -201)
     origin = np.array([5386, 963, 1499, -845, -201])
+    coord = np.array(["X","Y","Z","P","R"], dtype = str)
+    z_offset = -283
+    path = np.array ([[500,500,z_offset,0,0],[500,-500,0,0,0],[-500,-500,0,0,0],[-500,500,0,0,0]])
 
-    path = action()
+    act = action()
 
-    path.calibrate(origin)
-    z_offset = -100
-    #pvect = ([500,-500,][-500,500])
-    #path.move_path(pvect)
-    #pathpygame.examples.vgrade.main()
-    pvect = np.array([[500,500,-283],[500,-500,0],[-500,-500,0],[-500,500,0]])
-    path.move_path(pvect, origin)    # path.add_waypoint(b'SQ1', b'ORI', position) # add waypoint ISA from a distance (0,0,0,0,0) from ORI
-    # path.moveto_waypoint(b'SQ1')
-    # position = (-500,500,-270,0,0)
-    # path.add_waypoint(b'SQ2', b'ORI', position) 
-    # path.moveto_waypoint(b'SQ2')
-    # position = (-500,-500,-270,0,0)
-    # path.add_waypoint(b'SQ3', b'ORI', position)
-    # path.moveto_waypoint(b'SQ3')
-    # position = (500,-500,-270,0,0)
-    # path.add_waypoint(b'SQ4', b'ORI', position) 
-    # path.moveto_waypoint(b'SQ4')
+    new = 0 
+    if new == 0:
+        act.old_move(path,origin)
+    else:
+        act.moveto_origin(origin,coord)
+        act.init_points(origin,path)
+        act.create_path(path)
+        points,_= path.shape
+        for i in range(points):
+            act.add_waypoint(path,coord,i)
+            act.moveto_waypoint(i)
+
+    
 
 
     # closing and housekeeping
