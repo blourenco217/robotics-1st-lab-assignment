@@ -29,7 +29,7 @@ class action(object):
     """ class for the high-level actions to be executed by the robot """
 
     def __init__(self):
-        self.ser = serial.Serial('COM4', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        self.ser = serial.Serial('COM5', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         #self.ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
 
         # erase memory
@@ -101,8 +101,9 @@ class action(object):
         path[:,0] = path[:,0]+origin[0]
         path[:,1] = path[:,1]+origin[1]
         path[:,2] = path[:,2]+origin[2]
+        points,_= path.shape
 
-        self.ser.write(bytes("DIMP PATH[" + len(origin) + "]\r","Ascii")), time.sleep(0.5)
+        self.ser.write(bytes("DIMP PATH[" + str(points) + "]\r","Ascii")), time.sleep(0.5)
         #1
         for i in range(4):
             self.ser.write(bytes("HERE PATH[" + str(i+1) + "]\r"), "Ascii"), time.sleep(0.5)
