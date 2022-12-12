@@ -65,25 +65,30 @@ def main():
     # time.sleep(0.5)
     # read_and_wait(ser,2)
 
+# X: 4853    Y: 887     Z: 1110    P:-747     R:-191
 
-    origin = np.array([5386, 963, 1499, -845, -201])
+
+    #origin = np.array([4853, 887, 1110, -747, -191])
     coord = np.array(["X","Y","Z","P","R"], dtype = str)
     z_offset = -283
-    path = np.array ([[500,500,z_offset,0,0],[500,-500,0,0,0],[-500,-500,0,0,0],[-500,500,0,0,0]])
+
+    path = np.array ([[0,-500,0,0,0],[500,-500,0,0,0],[500,0,0,0,0],[0,0,0,0,0]])
 
     act = action()
 
-    new = 0 
+    new = 1
     if new == 0:
+        origin = act.manual_calibrate()
         act.old_move(path,origin)
     else:
-        act.moveto_origin(origin,coord)
+        origin = act.manual_calibrate()
+        #act.moveto_origin(origin,coord)
         act.init_points(origin,path)
         act.create_path(path)
         points,_= path.shape
         for i in range(points):
             act.add_waypoint(path,coord,i)
-            act.moveto_waypoint(i)
+        act.move_path(points)
 
     
 
