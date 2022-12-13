@@ -33,9 +33,9 @@ def find_nearest(array, value):
     return idx
 
 
-def get_end_pnts(pnts, image):
+def get_end_pnts(points, image):
     extremes = []    
-    for p in pnts:
+    for p in points:
         x = p[0]
         y = p[1]
         n = 0        
