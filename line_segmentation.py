@@ -76,30 +76,30 @@ def order_points(points, ind):
     points_new = [ points.pop(ind) ]  # initialize a new list of points with the known first point
     pcurr      = points_new[-1]       # initialize the current point (as the known point)
     print(len(points))
-    while len(points)>0:
+    while len(points)>10:
         d      = np.linalg.norm(np.array(points) - np.array(pcurr), axis=1)  # distances between pcurr and all other remaining points
-        ind    = d.argmin()                   # index of the closest point
-        # if d[ind] > 500:
-        #     print(pcurr)
-        #     print(points)
-        #     print(len(points))
-        #     print('jump')
-        #     np.concatenate(points_new, axis=0)
-        #     jump_1_idx = find_nearest(np.concatenate(points_new, axis=0), np.asarray(pcurr))
-        #     pcurr = points.pop(ind)
-        #     jump_2_idx = find_nearest(np.concatenate(points_new, axis=0), np.asarray(pcurr))
-        #     print(jump_1_idx, jump_2_idx)
-        #     print(points_new[jump_1_idx], points_new[jump_2_idx])
-        #     add_on = points_new[jump_2_idx:jump_1_idx].copy()
-        #     add_on.reverse()
-        #     for ii in add_on:
-        #         points_new.append(ii)
-        #     continue
+        ind    = d.argmin() # index of the closest point
+        if d[ind] > 500:
+            print(pcurr)
+            print(points)
+            print(len(points))
+            print('jump')
+            np.concatenate(points_new, axis=0)
+            jump_1_idx = find_nearest(np.concatenate(points_new, axis=0), np.asarray(pcurr))
+            pcurr = points.pop(ind)
+            jump_2_idx = find_nearest(np.concatenate(points_new, axis=0), np.asarray(pcurr))
+            print(jump_1_idx, jump_2_idx)
+            print(points_new[jump_1_idx], points_new[jump_2_idx])
+            add_on = points_new[jump_2_idx:jump_1_idx].copy()
+            add_on.reverse()
+            for ii in add_on:
+                points_new.append(ii)
+            continue
         points_new.append(points.pop(ind))  # append the closest point to points_new
         pcurr  = points_new[-1]               # update the current point
     return points_new
 
-file_name = 'images/test_draw_1.png'
+file_name = 'images/test_draw_2.png'
 image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 # scale_percent = 50 # percent of original size
@@ -114,14 +114,14 @@ points = cv2.findNonZero(image)
 points = np.squeeze(points)
 ext = get_end_pnts(points, image)
 
-corners = cv2.goodFeaturesToTrack(image, 10,0.005,50)
+corners = cv2.goodFeaturesToTrack(image, 5,0.005,100)
 corners = np.int0(corners)
 
 for i in corners:
     points = np.append(points, i, axis = 0)
     # x, y = i.ravel()
     # plt.scatter(x,y)
-# plt.imshow(image, aspect="auto", cmap="gray")
+plt.imshow(image, aspect="auto", cmap="gray")
 
 
 # x, y = np.array(points).T
@@ -144,7 +144,7 @@ x,y  = np.array(points_new).T
 x_new = []
 y_new = []
 
-theta_threshold = math.pi / 10
+theta_threshold = (5/9) * math.pi
 for ii in range(len(x)-2):
 
     if ii > len(x) - 3:
@@ -157,8 +157,8 @@ for ii in range(len(x)-2):
         y_new.append(y[ii])
         plt.scatter(x[ii], y[ii], color = 'red')
         continue
-    elif angle(x[ii], y[ii], x[ii+1], y[ii+1], x[ii+2], y[ii+2]) > theta_threshold:        
-        if (ii % 200) == 0:
+    elif angle(x[ii], y[ii], x[ii+1], y[ii+1], x[ii+2], y[ii+2]) < theta_threshold:        
+        if (ii % 450) == 0:
             x_new.append(x[ii + 1])
             y_new.append(y[ii + 1])
     else:
@@ -171,4 +171,6 @@ for ii in range(len(x)-2):
 for ii in range(len(x_new)): 
     plt.scatter(x_new[ii], y_new[ii], color = 'blue')
     plt.pause(0.0000001)
+
+print(len(x_new))
 plt.show()
