@@ -82,6 +82,9 @@ def main():
     
     with open('path_y.npy', 'rb') as f:
         path_y = np.load(f)
+    
+    path_x = path_x[0:50]
+    path_y = path_y[0:50]
 
     print(len(path_x))
 

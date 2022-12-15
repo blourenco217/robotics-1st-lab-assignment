@@ -59,8 +59,8 @@ class action(object):
     def create_path (self,path):
         """ create position vector """
         points,_ = path.shape
-        self.ser.write(bytes("DELP PATH\r","Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("YES\r", "Ascii")), read_and_wait(self.ser,2)
+        #self.ser.write(bytes("DELP PATH\r","Ascii")), read_and_wait(self.ser,2)
+        #self.ser.write(bytes("YES\r", "Ascii")), read_and_wait(self.ser,2)
         self.ser.write(bytes("DIMP PATH[" + str(points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
 
     def add_waypoint(self,path, coord, point):
