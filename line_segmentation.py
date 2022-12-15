@@ -158,7 +158,7 @@ for ii in range(len(x)-2):
         plt.scatter(x[ii], y[ii], color = 'red')
         continue
     elif angle(x[ii], y[ii], x[ii+1], y[ii+1], x[ii+2], y[ii+2]) < theta_threshold:        
-        if (ii % 500) == 0:
+        if (ii % 600) == 0:
             x_new.append(x[ii + 1])
             y_new.append(y[ii + 1])
     else:
@@ -174,3 +174,27 @@ for ii in range(len(x_new)):
 
 print(len(x_new))
 plt.show()
+
+x_new = np.asarray(x_new)
+y_new = np.asarray(y_new)
+x_new = x_new / 5
+x_new = np.round(x_new)
+y_new = (- y_new) / 5
+y_new = np.round(y_new)
+x_new = x_new - x_new[0]
+y_new = y_new - y_new[0]
+
+
+with open('path_x.npy', 'wb') as f:
+    np.save(f, np.array(x_new))
+
+with open('path_y.npy', 'wb') as f:
+    np.save(f, np.array(y_new))
+
+with open('path_x.npy', 'rb') as f:
+    path_x = np.load(f)
+    print(path_x)
+    
+with open('path_y.npy', 'rb') as f:
+    path_y = np.load(f)
+    print(path_y)

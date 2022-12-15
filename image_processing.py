@@ -131,11 +131,11 @@ class reference_tracking(object):
             if ii > len(x) - 3:
                 break
             
-            is_corner = [x[ii],y[ii]] in corners
+            is_corner = x[ii],y[ii] in corners
 
             if is_corner:
-                indices = np.where(corners==[x[ii],y[ii]])
-                corners = np.delete(corners, indices)
+                # indices = np.where(corners == x[ii],y[ii])
+                # corners = np.delete(corners, indices)
                 x_new.append(x[ii])
                 y_new.append(y[ii])
                 plt.scatter(x[ii], y[ii], color = 'red')
@@ -152,18 +152,36 @@ class reference_tracking(object):
         # print(x_new.shape, y_new.shape)
         return x_new, y_new
     
-    def image_normalization(self, x_, y_):
+    def image_normalization(self, x, y):
 
-        for x,y in x_, y_:
-            x= x / 5
-            x = math.ceil(x)
-            y = (- y) / 5
-            y= math.ceil(y)
+        x = np.asarray(x)
+        y = np.asarray(y)
+        x = x / 5
+        x = np.round(x)
+        y = (- y) / 5
+        y = np.round(y)
         x = x - x[0]
         y = y - y[0]
 
         return x, y
 
-# path = reference_tracking()
-# path_x,path_y = path.features2track()
-# path_x, path_y = path.image_normalization(path_x,path_y)
+path = reference_tracking()
+print('Initializing')
+path_x,path_y = path.features2track()
+print('Features Detected')
+path_x, path_y = path.image_normalization(path_x,path_y)
+print('Normalizing done')
+
+with open('path_x.npy', 'wb') as f:
+    np.save(f, np.array(path_x))
+
+with open('path_y.npy', 'wb') as f:
+    np.save(f, np.array(path_y))
+
+with open('path_x.npy', 'rb') as f:
+    path_x = np.load(f)
+    print(path_x)
+    
+with open('path_y.npy', 'rb') as f:
+    path_y = np.load(f)
+    print(path_y)
