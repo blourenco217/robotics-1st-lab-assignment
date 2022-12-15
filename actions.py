@@ -31,7 +31,7 @@ class action(object):
     """ class for the high-level actions to be executed by the robot """
 
     def __init__(self):
-        self.ser = serial.Serial('COM4', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        self.ser = serial.Serial('/dev/cu.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         #self.ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
 
         # erase memory
@@ -138,7 +138,10 @@ class action(object):
             #self.ser.write(bytes("MOVE PATH[" + str(i+1) + "]\r", "Ascii")), time.sleep(0.5)
             #self.ser.write(bytes("HERE PATH[" + str(i+1) + "]\r", "Ascii")), time.sleep(0.5)
         #self.ser.write(b'SPEED 20'), time.sleep(0.5)
-        self.ser.write(bytes("MOVES PATH 1 4 500\r","Ascii")), time.sleep(0.5) 
+        velocity=15
+        self.ser.write(bytes("SPEED "+ str(velocity) + "\r"))
+
+        self.ser.write(bytes("MOVES PATH 1 4\r","Ascii")), time.sleep(0.5) 
 
 
     # def add_waypoint(self, waypoint, reference, position):

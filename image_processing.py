@@ -4,6 +4,32 @@ import cv2
 from scipy.spatial.distance import cdist
 import imageio
 import os
+import math
+
+def unit_vector(vector):
+    """ Returns the unit vector of the vector.  """
+    return vector / np.linalg.norm(vector)
+
+def angle(x1, y1, x2, y2, x3, y3):
+    """
+    Returns the angles between vectors.
+
+    Parameters:
+    dir is a 2D-array of shape (N,M) representing N vectors in M-dimensional space.
+
+    The return value is a 1D-array of values of shape (N-1,), with each value
+    between 0 and pi.
+
+    0 implies the vectors point in the same direction
+    pi/2 implies the vectors are orthogonal
+    pi implies the vectors point in opposite directions
+    """
+    dir1 = np.array([x3-x1, y3-y1]) #vector from point 1 to 3
+    dir2 = np.array([x2-x1, y2-y1]) #vector from point 1 to 2
+    
+    dir1 = unit_vector(dir1)
+    dir2 = unit_vector(dir2)
+    return np.arccos(np.clip(np.dot(dir1, dir2), -1.0, 1.0))
 
 def loose_ends(points, image):
     end_points = []    
@@ -33,7 +59,7 @@ def nearest_index(array, value):
 def order_points(points, ind):
     points_new = [ points.pop(ind) ]  # initialize a new list of points with the known first point
     pcurr      = points_new[-1]       # initialize the current point (as the known point)
-    while len(points)>0:
+    while len(points)>10:
         d      = np.linalg.norm(np.array(points) - np.array(pcurr), axis=1)  # distances between pcurr and all other remaining points
         ind    = d.argmin()                   # index of the closest point
         if d[ind] > 500:
@@ -52,7 +78,7 @@ def order_points(points, ind):
     return points_new
 
 class reference_tracking(object):
-    def __init__(self, file_name = 'images/test_draw_2.png'):
+    def __init__(self, file_name = 'images/test_draw_1.png'):
         self.image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE) # read image in gray scale
         self.image_processing()
     
@@ -60,7 +86,7 @@ class reference_tracking(object):
         _, self.image = cv2.threshold(self.image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
         self.image = cv2.ximgproc.thinning(self.image)
     
-    def features2track(self, visual_graph = True):
+    def features2track(self, visual_graph = False):
         points = cv2.findNonZero(self.image)
         points = np.squeeze(points)
         ext = loose_ends(points, self.image)
@@ -92,10 +118,52 @@ class reference_tracking(object):
         return x,y
     
     def sampling(self, x, y):
-        return x[::200], y[::200]
-    
-    def image_normalization(self, x, y):
-        pass
 
-path = reference_tracking()
-path_x,path_y = path.features2track()
+        corners = cv2.goodFeaturesToTrack(self.image, 5,0.005,100)
+        corners = np.int0(corners)
+
+        x_new = []
+        y_new = []
+
+        theta_threshold = (5/9) * math.pi
+        for ii in range(len(x)-2):
+
+            if ii > len(x) - 3:
+                break
+            
+            is_corner = [x[ii],y[ii]] in corners
+
+            if is_corner:
+                indices = np.where(corners==[x[ii],y[ii]])
+                corners = np.delete(corners, indices)
+                x_new.append(x[ii])
+                y_new.append(y[ii])
+                plt.scatter(x[ii], y[ii], color = 'red')
+                continue
+            elif angle(x[ii], y[ii], x[ii+1], y[ii+1], x[ii+2], y[ii+2]) < theta_threshold:        
+                if (ii % 600) == 0:
+                    x_new.append(x[ii + 1])
+                    y_new.append(y[ii + 1])
+            else:
+                x = np.delete(x, ii + 1)
+                y = np.delete(y, ii + 1)
+                ii = ii - 1
+        
+        # print(x_new.shape, y_new.shape)
+        return x_new, y_new
+    
+    def image_normalization(self, x_, y_):
+
+        for x,y in x_, y_:
+            x= x / 5
+            x = math.ceil(x)
+            y = (- y) / 5
+            y= math.ceil(y)
+        x = x - x[0]
+        y = y - y[0]
+
+        return x, y
+
+# path = reference_tracking()
+# path_x,path_y = path.features2track()
+# path_x, path_y = path.image_normalization(path_x,path_y)

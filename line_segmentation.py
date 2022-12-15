@@ -99,7 +99,7 @@ def order_points(points, ind):
         pcurr  = points_new[-1]               # update the current point
     return points_new
 
-file_name = 'images/test_draw_2.png'
+file_name = 'images/test_draw_1.png'
 image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 # scale_percent = 50 # percent of original size
@@ -158,7 +158,7 @@ for ii in range(len(x)-2):
         plt.scatter(x[ii], y[ii], color = 'red')
         continue
     elif angle(x[ii], y[ii], x[ii+1], y[ii+1], x[ii+2], y[ii+2]) < theta_threshold:        
-        if (ii % 450) == 0:
+        if (ii % 500) == 0:
             x_new.append(x[ii + 1])
             y_new.append(y[ii + 1])
     else:

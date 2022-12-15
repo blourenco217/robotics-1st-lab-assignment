@@ -3,6 +3,7 @@ import serial
 import time
 import datetime
 import numpy as np
+from image_processing import reference_tracking
 
 from actions import action
 
@@ -72,7 +73,18 @@ def main():
     coord = np.array(["X","Y","Z","P","R"], dtype = str)
     z_offset = -283
 
-    path = np.array ([[0,-500,0,0,0],[500,-500,0,0,0],[500,0,0,0,0],[0,0,0,0,0]])
+    #path = np.array ([[0,-500,0,0,0],[500,-500,0,0,0],[500,0,0,0,0],[0,0,0,0,0]])
+    path_ = reference_tracking()
+    path_x,path_y = path_.features2track()
+    path_x, path_y = path_.image_normalization(path_x,path_y)
+    path = np.zeros((len(path_x), 5))
+    for ii in range(len(path_x)):
+        path[ii][0] = path_x[ii]
+        path[ii][1] = path_y[ii]
+        # path[ii][2] = 0
+        # path[ii][3] = 0
+        # path[ii][4] = 0
+  
 
     act = action()
 
