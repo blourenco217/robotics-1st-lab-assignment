@@ -155,14 +155,17 @@ image = cv2.ximgproc.thinning(image)
 points = cv2.findNonZero(image)
 print("after non zero")
 
+
 biforc_pnts=[]
+tresh = 5 #window to delete
 for i in points:
     x, y = i.ravel()
-    if x == 1182 and y > 37:
-        print("oi")
     if check_biforc(image,x,y):
         biforc_pnts = np.append(biforc_pnts, i)
         plt.scatter(x,y, color = 'red')
+        for i in range(-tresh,tresh+1):
+            for j in range(-tresh, tresh+1):
+                points[x+i][y+j] = 0
 
 
 # for j in end_pnts:
