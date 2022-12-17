@@ -50,27 +50,67 @@ def find_nearest(array, value):
     idx = cdist(array_,value_).argmin()
     return idx
 
+def neighbors(image, x,y): 
+    neigh_count = count_around(image,x,y,1)
+    return neigh_count
 
-def get_end_pnts(points, image):
-    extremes = []    
-    for p in points:
-        x = p[0]
-        y = p[1]
-        n = 0        
-        n += image[y - 1,x]
-        n += image[y - 1,x - 1]
-        n += image[y - 1,x + 1]
-        n += image[y,x - 1]    
-        n += image[y,x + 1]    
-        n += image[y + 1,x]    
-        n += image[y + 1,x - 1]
-        n += image[y + 1,x + 1]
-        n /= 255        
-        if n == 1:
-            extremes.append(p)
-            x,y = p
-            # plt.scatter(x,y, color='red')
-    return extremes
+
+
+def count_around_1(image,x,y): #count number of non zero pixels around
+    count = 0
+    count += image[y - 1,x]
+    count += image[y - 1,x - 1]
+    count += image[y - 1,x + 1]
+    count += image[y,x - 1]   
+    count += image[y,x + 1]
+    count += image[y + 1,x]    
+    count += image[y + 1,x - 1]
+    count += image[y + 1,x + 1]
+    count /= 255
+    return count
+
+def count_around(image,x,y,win): #count number of non zero pixels around
+    count = 0
+    for i in range(-win,win+1): #-1 to 1, -2 to 2
+        if i == -win or i == win:
+            for j in range(-win,win+1):
+                count += image[y+i][x+j]
+        else:
+            count += image[y+i][x-win]
+            count += image[y+i][x+win]
+
+    count /= 255
+    return count
+
+
+def check_biforc(image,x,y):
+    biforc=0
+    count= 0 # has to have at least 3 neighbors with empty spaces around it
+    # 2 fisrts and 2 lasts are repeated
+    # 20 = 2 + 16 + 2
+    #win_of_two = np.array([[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[2,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,2],[-2,2],[-2,1],[-2,0],[-2,-1],[-2,-2],[-1,-2],[0,-2],[1,-2]])
+    branches = count_around(image,x,y,1)
+    if branches > 2:
+        if count_around(image,x,y,2)>=branches and count_around(image,x,y,3)>=branches and  count_around(image,x,y,4)>=branches and count_around(image,x,y,5)>=branches and count_around(image,x,y,6)>=branches and count_around(image,x,y,7)>=branches and count_around(image,x,y,8)>=branches and count_around(image,x,y,9)>=branches and count_around(image,x,y,10)>=branches:
+            biforc=1
+
+
+        # for i in range(2, 18): #2 to 17
+        #     b=win_of_two[i][0]
+        #     a=win_of_two[i][1]
+        #     if image[y+win_of_two[i][1]][x+win_of_two[i][0]]/255==1: #there is a pixel
+        #         if image[y+win_of_two[i+1][1]][x+win_of_two[i+1][0]]==0: #empty space
+        #             count=+1
+
+        #         if image[y+win_of_two[i-1][1]][x+win_of_two[i-1][0]]==0: #empty space
+        #             count=+1 
+        #         #else: #not empty space
+        #         #    if image[y+win_of_two[i-2][1]][x+win_of_two[i-2][0]]==0: #empty space
+        #         #        count=+1
+
+        #if count >= 6:
+                                
+    return biforc
 
 def order_points(points, ind):
     points_new = [ points.pop(ind) ]  # initialize a new list of points with the known first point
@@ -99,8 +139,8 @@ def order_points(points, ind):
         pcurr  = points_new[-1]               # update the current point
     return points_new
 
-file_name = 'images/test_draw_1.png'
-image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
+file_name = 'images/test_draw_2.png'
+original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 # scale_percent = 50 # percent of original size
 # width = int(image.shape[1] * scale_percent / 100)
@@ -108,12 +148,36 @@ image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 # dim = (width, height)
 # image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
 
-_, image = cv2.threshold(image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
+_, image = cv2.threshold(original_image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
 image = cv2.ximgproc.thinning(image)
-points = cv2.findNonZero(image)
-points = np.squeeze(points)
-ext = get_end_pnts(points, image)
 
+
+points = cv2.findNonZero(image)
+print("after non zero")
+
+biforc_pnts=[]
+for i in points:
+    x, y = i.ravel()
+    if x == 1182 and y > 37:
+        print("oi")
+    if check_biforc(image,x,y):
+        biforc_pnts = np.append(biforc_pnts, i)
+        plt.scatter(x,y, color = 'red')
+
+
+# for j in end_pnts:
+#     #points = np.append(points, j, axis = 0)
+#     x, y = j.ravel()
+#     plt.scatter(x,y)
+
+plt.imshow(image)
+#plt.scatter(x,y, color = 'red')
+
+#plt.imshow(original_image, aspect="auto", cmap="gray")
+plt.show()
+
+
+""""
 corners = cv2.goodFeaturesToTrack(image, 5,0.005,100)
 corners = np.int0(corners)
 
@@ -198,3 +262,4 @@ with open('path_x.npy', 'rb') as f:
 with open('path_y.npy', 'rb') as f:
     path_y = np.load(f)
     print(path_y)
+"""

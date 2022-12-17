@@ -56,19 +56,6 @@ def main():
     ############################################################################
 
 
-    # print('going to point P1')
-    # ser.write(b'MOVE P1\r')
-    # time.sleep(0.5)
-    # read_and_wait(ser,2)
-
-    # print('going to point P2')
-    # ser.write(b'MOVE P2\r')
-    # time.sleep(0.5)
-    # read_and_wait(ser,2)
-
-# X: 4853    Y: 887     Z: 1110    P:-747     R:-191
-
-
     #origin = np.array([4853, 887, 1110, -747, -191])
     coord = np.array(["X","Y","Z","P","R"], dtype = str)
     z_offset = -283
@@ -77,48 +64,38 @@ def main():
     # path_ = reference_tracking()
     # path_x,path_y = path_.features2track()
 
-    with open('path_x.npy', 'rb') as f:
-        path_x = np.load(f)
+    usesaved=0 #usar o que esta guardado no x e y.npy
+    if usesaved==1:
+        with open('path_x.npy', 'rb') as f:
+            path_x = np.load(f)
+        
+        with open('path_y.npy', 'rb') as f:
+            path_y = np.load(f)
+        
+        path_x = path_x[0:50]
+        path_y = path_y[0:50]
+
+        path = np.zeros((len(path_x), 5))
+
+        for ii in range(len(path_x)):
+            path[ii][0] = path_x[ii]
+            path[ii][1] = path_y[ii]
     
-    with open('path_y.npy', 'rb') as f:
-        path_y = np.load(f)
+        path= path.astype(np.int32)
     
-    path_x = path_x[0:50]
-    path_y = path_y[0:50]
 
-    print(len(path_x))
-
-
-
-    path = np.zeros((len(path_x), 5))
-
-
-    for ii in range(len(path_x)):
-        path[ii][0] = path_x[ii]
-        path[ii][1] = path_y[ii]
-        # path[ii][2] = 0
-        # path[ii][3] = 0
-        # path[ii][4] = 0
-  
-    path= path.astype(np.int32)
     act = action()
-
-    new = 1
-    if new == 0:
-        origin = act.manual_calibrate()
-        act.old_move(path,origin)
-    else:
-        origin = act.manual_calibrate()
-        #act.moveto_origin(origin,coord)
-        act.init_points(origin,path)
-        act.create_path(path)
-        points,_= path.shape
-        for i in range(points):
-            act.add_waypoint(path,coord,i)
-        act.move_path(points)
-
-    
-
+    #OLD
+    #origin = act.manual_calibrate()
+    #act.old_move(path,origin)
+    origin = act.manual_calibrate()
+    #act.moveto_origin(origin,coord)
+    act.init_points(origin,path)
+    act.create_path(path)
+    points,_= path.shape
+    for i in range(points):
+        act.add_waypoint(path,coord,i)
+    act.move_path(points)
 
     # closing and housekeeping
     # ser.close()
