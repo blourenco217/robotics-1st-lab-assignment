@@ -50,24 +50,6 @@ def find_nearest(array, value):
     idx = cdist(array_,value_).argmin()
     return idx
 
-def neighbors(image, x,y): 
-    neigh_count = count_around(image,x,y,1)
-    return neigh_count
-
-
-
-def count_around_1(image,x,y): #count number of non zero pixels around
-    count = 0
-    count += image[y - 1,x]
-    count += image[y - 1,x - 1]
-    count += image[y - 1,x + 1]
-    count += image[y,x - 1]   
-    count += image[y,x + 1]
-    count += image[y + 1,x]    
-    count += image[y + 1,x - 1]
-    count += image[y + 1,x + 1]
-    count /= 255
-    return count
 
 def count_around(image,x,y,win): #count number of non zero pixels around certain window
     count = 0
@@ -87,17 +69,28 @@ def count_around(image,x,y,win): #count number of non zero pixels around certain
     count /= 255
 
     return count
+    
 
 def check_end(image,x,y):
     end_pnt=0
 
-    if count_around(image,x,y,1)==1 or\
-       count_around(image,x,y,2)==1 or\
-       count_around(image,x,y,3)==1 or\
-       count_around(image,x,y,4)==1:# or\
-       #count_around(image,x,y,5)==1:
-        # print(count_around(image,x,y,1))
-        end_pnt = 1
+    if count_around(image,x,y,1)==1 or \
+        count_around(image,x,y,2)==1:
+        #count_around(image,x,y,3)==1 or \
+        #count_around(image,x,y,4)==1 or \
+        #count_around(image,x,y,5)==1:
+            if count_around(image,x,y,1)>=3 or \
+            count_around(image,x,y,2)>=3 or\
+            count_around(image,x,y,3)>=3 or\
+            count_around(image,x,y,4)>=3 or\
+            count_around(image,x,y,5)>=3 or\
+            count_around(image,x,y,6)>=3 or\
+            count_around(image,x,y,7)>=3 or\
+            count_around(image,x,y,8)>=3 or\
+            count_around(image,x,y,8)>=3 or\
+            count_around(image,x,y,10)>=3:
+                return end_pnt
+            end_pnt = 1
 
     return end_pnt
 
@@ -119,11 +112,6 @@ def check_biforc(image,x,y):
                 biforc=1
                                 
     return biforc
-
-def clustering(points,start, stop): #takes array and saves it in cluster
-
-    return 
-
 
 
 
@@ -156,16 +144,6 @@ def order_points(points, ind):
     return points_new
 
 
-"""""
-def contour():
-    return contour
-    
-
-
-def path_choice (countors)
-#countors is a an array of countors, which are arrays
-
-"""
 
 file_name = 'images/test_draw_2.png'
 original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
@@ -182,6 +160,14 @@ points = cv2.findNonZero(image)
 
 plt.imshow(image,  aspect="auto", cmap="gray")
 
+end_pnts=[]
+for i in points:
+    x,y = i.ravel()
+    if check_end(image,x,y):
+        end_pnts = np.append(end_pnts,i)
+        plt.scatter(x,y,color = 'blue')
+
+
 biforc_pnts = []
 tresh = 5 #window to delete
 for i in points:
@@ -195,12 +181,6 @@ for i in points:
             #points = np.delete(points,ii)
             pass
 print(biforc_pnts)
-end_pnts=[]
-for i in points:
-    x,y = i.ravel()
-    if check_end(image,x,y):
-        end_pnts = np.append(end_pnts,i)
-        plt.scatter(x,y,color = 'orange')
 
 contours, _ = cv2.findContours(image, cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
 
@@ -230,23 +210,13 @@ for contour in contours:
     y = y[::100]
 
     for i in range(len(x)):
-        plt.scatter(x[i], y[i])
-        plt.pause(0.01)
-    plt.pause(1)
+        #plt.scatter(x[i], y[i])
+        #plt.pause(0.01)
+        pass
+    #plt.pause(1)
 
 #plt.imshow(original_image, aspect="auto", cmap="gray")
 plt.show()
-
-
-
-""""
-countors = [] # ja ordenados a comecar num end point
-for i in countors[]
-"""
-
-
-
-
 
 """"
 corners = cv2.goodFeaturesToTrack(image, 5,0.005,100)
