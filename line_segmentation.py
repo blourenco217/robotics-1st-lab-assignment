@@ -69,7 +69,7 @@ def count_around_1(image,x,y): #count number of non zero pixels around
     count /= 255
     return count
 
-def count_around(image,x,y,win): #count number of non zero pixels around
+def count_around(image,x,y,win): #count number of non zero pixels around certain window
     count = 0
     for i in range(-win,win+1): #-1 to 1, -2 to 2
         if i == -win or i == win:
@@ -80,37 +80,35 @@ def count_around(image,x,y,win): #count number of non zero pixels around
             count += image[y+i][x+win]
 
     count /= 255
+
     return count
+
+def check_end(image,x,y):
+    end_pnt=0
+    gap = range(1,3) #1 or 2
+
+    if count_around(image,x,y,3)==1 or count_around(image,x,y,4)==1 or count_around(image,x,y,5)==1:
+        end_pnt = 1
+
+    return end_pnt
 
 
 def check_biforc(image,x,y):
     biforc=0
-    count= 0 # has to have at least 3 neighbors with empty spaces around it
-    # 2 fisrts and 2 lasts are repeated
-    # 20 = 2 + 16 + 2
-    #win_of_two = np.array([[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[2,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,2],[-2,2],[-2,1],[-2,0],[-2,-1],[-2,-2],[-1,-2],[0,-2],[1,-2]])
+
     branches = count_around(image,x,y,1)
     if branches > 2:
         if count_around(image,x,y,2)>=branches and count_around(image,x,y,3)>=branches and  count_around(image,x,y,4)>=branches and count_around(image,x,y,5)>=branches and count_around(image,x,y,6)>=branches and count_around(image,x,y,7)>=branches and count_around(image,x,y,8)>=branches and count_around(image,x,y,9)>=branches and count_around(image,x,y,10)>=branches:
             biforc=1
-
-
-        # for i in range(2, 18): #2 to 17
-        #     b=win_of_two[i][0]
-        #     a=win_of_two[i][1]
-        #     if image[y+win_of_two[i][1]][x+win_of_two[i][0]]/255==1: #there is a pixel
-        #         if image[y+win_of_two[i+1][1]][x+win_of_two[i+1][0]]==0: #empty space
-        #             count=+1
-
-        #         if image[y+win_of_two[i-1][1]][x+win_of_two[i-1][0]]==0: #empty space
-        #             count=+1 
-        #         #else: #not empty space
-        #         #    if image[y+win_of_two[i-2][1]][x+win_of_two[i-2][0]]==0: #empty space
-        #         #        count=+1
-
-        #if count >= 6:
                                 
     return biforc
+
+def clustering(points,start, stop): #takes array and saves it in cluster
+
+    return 
+
+
+
 
 def order_points(points, ind):
     points_new = [ points.pop(ind) ]  # initialize a new list of points with the known first point
@@ -150,10 +148,7 @@ original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 _, image = cv2.threshold(original_image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
 image = cv2.ximgproc.thinning(image)
-
-
 points = cv2.findNonZero(image)
-print("after non zero")
 
 
 biforc_pnts=[]
@@ -163,18 +158,30 @@ for i in points:
     if check_biforc(image,x,y):
         biforc_pnts = np.append(biforc_pnts, i)
         plt.scatter(x,y, color = 'red')
-        for i in range(-tresh,tresh+1):
-            for j in range(-tresh, tresh+1):
-                points[x+i][y+j] = 0
+        for ii in range(-tresh,tresh+1): #erase point and its neighbors
+            for jj in range(-tresh, tresh+1):
+                #points = np.delete(points, i)
+                pass
+
+end_pnts=[]
+for i in points:
+    x, y = i.ravel()
+    if check_end(image,x,y):
+        end_pnts = np.append(end_pnts, i)
+        plt.scatter(x,y, color = 'blue')
+        for ii in range(-tresh,tresh+1): #erase point and its neighbors
+            for jj in range(-tresh, tresh+1):
+                #points = np.delete(points, i)
+                pass
 
 
-# for j in end_pnts:
-#     #points = np.append(points, j, axis = 0)
-#     x, y = j.ravel()
-#     plt.scatter(x,y)
+
+
+
+
+
 
 plt.imshow(image)
-#plt.scatter(x,y, color = 'red')
 
 #plt.imshow(original_image, aspect="auto", cmap="gray")
 plt.show()
@@ -196,16 +203,14 @@ plt.imshow(image, aspect="auto", cmap="gray")
 # print(x.shape, y.shape)
 # points = np.array([x, y]).T
 # print(points.shape)
-idx = find_nearest(points, ext[0])
+
+"""
+
+"""""
+idx = find_nearest(points, end_pnts[0])
 points_new = order_points(list(points), idx)
 
 x,y  = np.array(points_new).T
-
-
-# idx = find_nearest(points, ext[0])
-# points_new = order_points(list(points), idx)
-
-# x,y  = np.array(points_new).T
 
 
 x_new = []
@@ -244,14 +249,14 @@ plt.show()
 
 x_new = np.asarray(x_new)
 y_new = np.asarray(y_new)
-x_new = x_new / 5
+x_new = x_new / 5 #scale
 x_new = np.round(x_new)
 y_new = (- y_new) / 5
 y_new = np.round(y_new)
 x_new = x_new - x_new[0]
 y_new = y_new - y_new[0]
-
-
+"""
+"""""
 with open('path_x.npy', 'wb') as f:
     np.save(f, np.array(x_new))
 
