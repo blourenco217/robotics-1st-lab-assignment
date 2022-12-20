@@ -145,7 +145,7 @@ def order_points(points, ind):
 
 
 
-file_name = 'images/test_draw_2.png'
+file_name = 'images/test_draw_3.png'
 original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 # scale_percent = 50 # percent of original size
@@ -184,7 +184,7 @@ print(biforc_pnts)
 
 contours, _ = cv2.findContours(image, cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
 
-plot = False
+plot = True
 i = 0
 for contour in contours:
     print('coucou')
@@ -213,7 +213,7 @@ for contour in contours:
         #plt.scatter(x[i], y[i])
         #plt.pause(0.01)
         pass
-    #plt.pause(1)
+    plt.pause(1)
 
 #plt.imshow(original_image, aspect="auto", cmap="gray")
 plt.show()

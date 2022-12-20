@@ -64,7 +64,7 @@ def nearest_index(array, value):
     idx = cdist(array_,value_).argmin()
     return idx
 
-file_name = 'images/test_draw_2.png'
+file_name = 'images/test_draw_4.png'
 original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 image = cv2.copyMakeBorder(original_image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value = 255)
 _, image = cv2.threshold(image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
@@ -94,106 +94,42 @@ for i in points:
                 image[y+jj][x+ii] = 0
 
 contours, _ = cv2.findContours(image, cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)
+
+good_features =  end_pnts + biforc_pnts
 path_cont_x = []
 path_cont_y = []
 path_cont = []
-i=0
+i = 0
 for contour in contours:
     print('coucou')
-    x = [i[:,0] for i in contour]
-    y = [i[:,1] for i in contour]
-
-    x = x[::100]
-    y = y[::100]
-
-    path_cont_x.append(x)
-    path_cont_y.append(y)
 
     path_cont = [i[:] for i in contour]
+    good_features_c = [] # good features in each contour
+    for point in good_features:
+        if (cdist(np.array(path_cont).reshape(-1,2), point.reshape(-1,2)) < 10).any() :
+            good_features_c.append(point)
 
+    print(good_features_c)
 
-    if i == 0:
-        a = nearest_index(np.array(path_cont), biforc_pnts[2])
-        b = nearest_index(np.array(path_cont), end_pnts[0])
+    a = nearest_index(np.array(path_cont), good_features_c[0])
+    b = nearest_index(np.array(path_cont), good_features_c[1])
+
+    if a > b:
+        cleaned_up_path = path_cont[b: a]
+        cleaned_up_path.reverse()
+    else:
         cleaned_up_path = path_cont[a: b]
         cleaned_up_path.reverse()
+    x,y  = np.array(cleaned_up_path).T
+    x = x.T[::200]
+    y = y.T[::200]
+    for j in range(len(x)):
+        plt.scatter(x[j], y[j])
+        plt.pause(0.001)
 
-        x,y  = np.array(cleaned_up_path).T
-        x = x.T[::200]
-        y = y.T[::200]
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.001)
-        # plt.plot(x,y, color='blue')
-    if i == 1:
-        a = nearest_index(np.array(path_cont), biforc_pnts[2])
-        b = nearest_index(np.array(path_cont), biforc_pnts[1])
-        cleaned_up_path = path_cont[b: a]
-        cleaned_up_path.reverse()
+    
 
-        x,y  = np.array(cleaned_up_path).T
-        x = x.T[::200]
-        y = y.T[::200]
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.001)
-        # plt.plot(x,y, color='red')
-    if i == 2:
-        a = nearest_index(np.array(path_cont), biforc_pnts[2])
-        b = nearest_index(np.array(path_cont), biforc_pnts[0])
-        cleaned_up_path = path_cont[b: a]
-        cleaned_up_path.reverse()
 
-        x,y  = np.array(cleaned_up_path).T
-        x = x.T[::200]
-        y = y.T[::200]
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.001)
-        # plt.plot(x,y, color='green')
-    if i == 3:
-        a = nearest_index(np.array(path_cont), biforc_pnts[0])
-        b = nearest_index(np.array(path_cont), biforc_pnts[1])
-        cleaned_up_path = path_cont[a: b]
-        # cleaned_up_path.reverse()
 
-        x,y  = np.array(cleaned_up_path).T
-        x = x.T[::200]
-        y = y.T[::200]
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.001)
-        # plt.plot(x,y, color='pink')
-    if i == 4:
-        a = nearest_index(np.array(path_cont), biforc_pnts[0])
-        b = nearest_index(np.array(path_cont), biforc_pnts[1])
-        cleaned_up_path = path_cont[b: a]
-        # cleaned_up_path.reverse()
 
-        x,y  = np.array(cleaned_up_path).T
-        x = x.T[::200]
-        y = y.T[::200]
-        for j in range(len(x)):
-            plt.scatter(x[j], y[j])
-            plt.pause(0.001)
-        # plt.plot(x,y, color='orange')
-    if i == 5:
-        plt.plot(x,y, color='yellow')
-    i = i+1
-    plt.pause(1)
-
-# print(end_pnts[0])
-# print(nearest_index(np.array(path_cont), end_pnts[0]))
-# print(nearest_index(np.array(path_cont), end_pnts[1]))
-
-# cleaned_up_path = path_cont[nearest_index(np.array(path_cont), end_pnts[0]): nearest_index(np.array(path_cont), end_pnts[1])]
-
-# x,y  = np.array(cleaned_up_path).T
-
-# x = x.T[::200]
-# y = y.T[::200]
-
-# for i in range(len(x)):
-#     plt.scatter(x[i], y[i])
-#     plt.pause(0.001)
 plt.show()
