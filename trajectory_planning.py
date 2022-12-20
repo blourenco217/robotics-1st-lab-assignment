@@ -80,6 +80,7 @@ def nearest_index(array, value):
     return idx
 
 def trajectory_gif(image, x, y):
+    plt.close()
     original_image = cv2.bitwise_not(image)
     plt.imshow(original_image, aspect="auto", cmap="gray")
     filenames = []
@@ -223,6 +224,14 @@ class reference(object):
         return x_new, y_new
 
     def normalize(self,x, y):
+        x = np.asarray(x)
+        y = np.asarray(y)
+        x = x / 5
+        x = np.round(x)
+        y = (- y) / 5
+        y = np.round(y)
+        x = x - x[0]
+        y = y - y[0]
         return x, y
     
 path = reference()
