@@ -64,7 +64,7 @@ def nearest_index(array, value):
     idx = cdist(array_,value_).argmin()
     return idx
 
-file_name = 'images/test_draw_4.png'
+file_name = 'images/test_draw_3.png'
 original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 image = cv2.copyMakeBorder(original_image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value = 255)
 _, image = cv2.threshold(image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV)
@@ -82,7 +82,7 @@ for i in points:
         plt.scatter(x,y,color = 'blue')
 
 biforc_pnts = []
-tresh = 5 # window to delete
+tresh = 10 # window to delete
 for i in points:
     x,y = i.ravel()
     if check_biforc(image,x,y):
@@ -93,36 +93,41 @@ for i in points:
             for jj in range(-tresh,tresh+1):
                 image[y+jj][x+ii] = 0
 
-contours, _ = cv2.findContours(image, cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)
+contours, _ = cv2.findContours(image, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
 good_features =  end_pnts + biforc_pnts
 path_cont_x = []
 path_cont_y = []
 path_cont = []
 i = 0
+
+
 for contour in contours:
     print('coucou')
 
     path_cont = [i[:] for i in contour]
     good_features_c = [] # good features in each contour
     for point in good_features:
-        if (cdist(np.array(path_cont).reshape(-1,2), point.reshape(-1,2)) < 10).any() :
+        if (cdist(np.array(path_cont).reshape(-1,2), point.reshape(-1,2)) < 20).any() :
             good_features_c.append(point)
 
     print(good_features_c)
 
-    a = nearest_index(np.array(path_cont), good_features_c[0])
-    b = nearest_index(np.array(path_cont), good_features_c[1])
-
-    if a > b:
-        cleaned_up_path = path_cont[b: a]
-        cleaned_up_path.reverse()
+    if len(good_features_c)==0 or len(good_features_c) == 1:
+        cleaned_up_path = path_cont
     else:
-        cleaned_up_path = path_cont[a: b]
-        cleaned_up_path.reverse()
+        a = nearest_index(np.array(path_cont), good_features_c[0])
+        b = nearest_index(np.array(path_cont), good_features_c[1])
+
+        if a > b:
+            cleaned_up_path = path_cont[b: a]
+            cleaned_up_path.reverse()
+        else:
+            cleaned_up_path = path_cont[a: b]
+            cleaned_up_path.reverse()
     x,y  = np.array(cleaned_up_path).T
-    x = x.T[::200]
-    y = y.T[::200]
+    x = x.T[::100]
+    y = y.T[::100]
     for j in range(len(x)):
         plt.scatter(x[j], y[j])
         plt.pause(0.001)

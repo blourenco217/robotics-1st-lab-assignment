@@ -145,7 +145,7 @@ def order_points(points, ind):
 
 
 
-file_name = 'images/test_draw_3.png'
+file_name = 'images/test_draw_4.png'
 original_image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
 
 # scale_percent = 50 # percent of original size
@@ -188,8 +188,8 @@ plot = True
 i = 0
 for contour in contours:
     print('coucou')
-    x = [i[:,0] for i in contour]
-    y = [i[:,1] for i in contour]
+    x = [j[:,0] for j in contour]
+    y = [j[:,1] for j in contour]
 
     if plot:
         if i == 0:
@@ -204,15 +204,18 @@ for contour in contours:
             plt.plot(x,y, color='orange')
         if i == 5:
             plt.plot(x,y, color='yellow')
+        # else:
+        #     plt.plot(x,y, color='lime')
         i = i+1
+        print(i)
 
     x = x[::100]
     y = y[::100]
 
-    for i in range(len(x)):
-        #plt.scatter(x[i], y[i])
-        #plt.pause(0.01)
-        pass
+    # for i in range(len(x)):
+    #     #plt.scatter(x[i], y[i])
+    #     #plt.pause(0.01)
+    #     pass
     plt.pause(1)
 
 #plt.imshow(original_image, aspect="auto", cmap="gray")
