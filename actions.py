@@ -31,7 +31,7 @@ class action(object):
     """ class for the high-level actions to be executed by the robot """
 
     def __init__(self):
-        self.ser = serial.Serial('COM5', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        self.ser = serial.Serial('/dev/cu.usbserial-1420', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         #self.ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
 
         # erase memory

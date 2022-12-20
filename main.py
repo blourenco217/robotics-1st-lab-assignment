@@ -83,7 +83,6 @@ def main():
     
         path= path.astype(np.int32)
     
-
     act = action()
     #OLD
     #origin = act.manual_calibrate()
