@@ -63,7 +63,7 @@ def main():
     path_x,path_y = ref.features2track()
     path = np.concatenate(path_x,path_y)
 
-    robot = 0
+    robot = 1
     if robot == 1:
         act = action()
         origin = act.manual_calibrate()
