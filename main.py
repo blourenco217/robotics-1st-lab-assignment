@@ -3,8 +3,7 @@ import serial
 import time
 import datetime
 import numpy as np
-# from image_processing import reference_tracking
-
+from trajectory_planning import reference
 from actions import action
 
 # This function listens the serial port for wait_time seconds
@@ -58,14 +57,28 @@ def main():
 
     #origin = np.array([4853, 887, 1110, -747, -191])
     coord = np.array(["X","Y","Z","P","R"], dtype = str)
-    z_offset = -283
+    #z_offset = -283
 
-    #path = np.array ([[0,-500,0,0,0],[500,-500,0,0,0],[500,0,0,0,0],[0,0,0,0,0]])
-    # path_ = reference_tracking()
-    # path_x,path_y = path_.features2track()
+    ref = reference()
+    path_x,path_y = ref.features2track()
+    path = np.concatenate(path_x,path_y)
 
-    usesaved=0 #usar o que esta guardado no x e y.npy
-    if usesaved==1:
+    robot = 0
+    if robot == 1:
+        act = action()
+        origin = act.manual_calibrate()
+        act.init_points(origin,path)
+        act.create_path(path)
+        points,_= path.shape
+        for i in range(points):
+            act.add_waypoint(path,coord,i)
+        act.move_path(points)
+
+    # closing and housekeeping
+    # ser.close()
+
+    usesaved = 0 #uses what is on the x and y
+    if usesaved == 1:
         with open('path_x.npy', 'rb') as f:
             path_x = np.load(f)
         
@@ -83,25 +96,10 @@ def main():
     
         path= path.astype(np.int32)
     
-    act = action()
-    #OLD
-    #origin = act.manual_calibrate()
-    #act.old_move(path,origin)
-    origin = act.manual_calibrate()
-    #act.moveto_origin(origin,coord)
-    act.init_points(origin,path)
-    act.create_path(path)
-    points,_= path.shape
-    for i in range(points):
-        act.add_waypoint(path,coord,i)
-    act.move_path(points)
-
-    # closing and housekeeping
-    # ser.close()
+ 
 
     print('housekeeping completed - exiting')
     
-
 ########################################################################
 if __name__ == '__main__':
     main()
