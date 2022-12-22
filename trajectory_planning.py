@@ -108,7 +108,7 @@ def trajectory_gif(image, x, y):
         filenames.append(filename)
         plt.scatter(x[ii], y[ii], color = 'blue')
         plt.savefig(filename)
-        #plt.pause(0.01)
+        plt.pause(0.01)
     plt.show()
     # build gif
     with imageio.get_writer('outputs/trajectory_planning.gif', mode='I') as writer:
@@ -120,7 +120,7 @@ def trajectory_gif(image, x, y):
         os.remove(filename)
 
 def sampling(self, x, y):
-    """ Reduze the size of the image by a 5-factor """  
+    """ Reduze the size of the image """  
     x_new = []
     y_new = []
     theta_threshold_min = 15 * math.pi/180
@@ -130,7 +130,7 @@ def sampling(self, x, y):
     for ii in range(len(x)-2):
         ag = angle(x_new[-1], y_new[-1], x[ii+1], y[ii+1], x[ii+2], y[ii+2])
         if  ag > theta_threshold_min and ag < theta_threshold_max:
-            print(ag * 180 / math.pi)      
+            #print(ag * 180 / math.pi)      
             x_new.append(x[ii + 1])
             y_new.append(y[ii + 1])
         # else:
@@ -142,14 +142,22 @@ def sampling(self, x, y):
     # print(x_new.shape, y_new.shape)
     return x_new, y_new
 
-def normalize(self,x, y):
+def normalize(self,x_, y_):
     """ Reduze the size of the image by a A5 paper - y 1480 x 2100 tenths of mm """  
-    x = np.asarray(x)
-    y = np.asarray(y)
+
+    x = np.zeros(len(x_))
+    y = np.zeros(len(y_))
+
+    for i in range(len(x_)):
+        x[i] = int(x_[i])
+        y[i] = int(y_[i])
+
+
     
     #A5 dimensions
-    h_paper = 1480 
-    w_paper =  2100
+    h_paper = 1480 * 1.5
+    w_paper =  2100 * 1.5
+
 
     h_image, w_image = self.original_image.shape #y,x
     
@@ -169,11 +177,16 @@ def normalize(self,x, y):
             x = x * w_paper / w_image
             y = y * w_paper / w_image
 
-    y = np.round(y)
-    x = np.round(x)
+    y = np.ceil(y)
+    x = np.ceil(x)
+    #print(x,y)
+    
     x = x - x[0]
     y = - y
     y = y - y[0]
+
+    x = x.astype(np.int32)
+    y = y.astype(np.int32)
 
     return x, y
 
@@ -284,10 +297,11 @@ class reference(object):
             path_y = np.concatenate((path_y, y))
         # path_x, path_y =  path_x[0], path_y[0]
         path_x, path_y = normalize(self, path_x,path_y)
-        plt.scatter(path_x, path_y)
-        plt.show()
+        plt.scatter(path_x, path_y) 
+        #plt.show() #PLOT FOR IMAGE
         if trajectory_plot: trajectory_gif(self.image, path_x, path_y)
-
+        #print("path_x, path_y")
+        #print(path_x,path_y)
         return path_x, path_y
     
 

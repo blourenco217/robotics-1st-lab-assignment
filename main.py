@@ -53,26 +53,52 @@ def main():
     #(from a terminal console - you can use, for example, putty or hyperterminal
     # as terminal console)
     ############################################################################
+# [[   0,   33,   67,   90,   81,   64,   33, -135, -168, -183, -152,
+#    -128,  -94,  107,  174,  201,  212,  211,  200,  178,  112, -156,
+#    -257, -289, -301, -111, -102,  -68,   -1,   39,   39,   33,   11,
+#     -22,  -89, -125, -191, -291, -108, -102,   32, -104, -104],
+#  [   0,   -5,  -23,  -57, -157, -191, -218, -199, -181, -149,  -14,
+#      19,   39,    3,  -40,  -74, -107, -141, -174, -208, -256, -258,
+#    -219, -190, -157,  245,  261,  271,  369,  603,  619,  652,  686,
+#     711,  731,  678,  633,  613,  478,  476,  610,  473,  272]]
 
+    #coord = np.array(["X","Y","Z","P","R"], dtype = str)
+    coord = np.array(["X","Y"], dtype = str)
 
-    #origin = np.array([4853, 887, 1110, -747, -191])
-    coord = np.array(["X","Y","Z","P","R"], dtype = str)
     #z_offset = -283
 
     ref = reference()
     path_x,path_y = ref.features2track()
-    path = np.concatenate(path_x,path_y)
+    #path = np.concatenate((path_x,path_y))
+    path = np.array([path_x,path_y])
+    #path = path.transpose
+    #print("act")
+
+    path = np.transpose(path)
+    path = path[0:10]
+    print(path)
+    points,_= path.shape
+
+    z_rest = 1000
+    z_lift = 1400
+
+
+
+
+
 
     robot = 1
     if robot == 1:
         act = action()
+        origin = act.initialize()
         origin = act.manual_calibrate()
         act.init_points(origin,path)
         act.create_path(path)
-        points,_= path.shape
+        #act.rest_pen()
         for i in range(points):
-            act.add_waypoint(path,coord,i)
+            act.add_waypoint(path,coord,i,z_rest)
         act.move_path(points)
+        act.lift_pen(z_lift)
 
     # closing and housekeeping
     # ser.close()
@@ -94,7 +120,7 @@ def main():
             path[ii][0] = path_x[ii]
             path[ii][1] = path_y[ii]
     
-        path= path.astype(np.int32)
+        path = path.astype(np.int32)
     
  
 
