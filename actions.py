@@ -1,9 +1,16 @@
+############################################################################
+    # ROBOTICS 22-23: actions.py
+    # It contanis all the actions needed to connect with the robot
+############################################################################
 
 import serial 
 import time
 import numpy as np
 import re
 
+# This function listens the serial port for wait_time seconds
+# waiting for ASCII characters to be sent by the robot
+# It returns the string of characters
 def read_and_wait(ser, wait_time):
     time.sleep(0.4)
     output = ""
@@ -30,35 +37,34 @@ def read_and_wait(ser, wait_time):
 class action(object):
     """ class for the high-level actions to be executed by the robot """
 
+    # Open the serial port NAME_PORT  to communicate with the robot
     def __init__(self):
         self.ser = serial.Serial('COM3', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
-        #self.ser = serial.Serial('/dev/tty.usbserial-1410', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
-
         # erase memory
         # home position
     
+    # When all of the points have been processed
+    # set the pen's z position to write in the paper
     def lift_pen(self, z_lift):
         #z_lift = 1400
         self.ser.write(bytes("DEFP LIFT\r", "Ascii")), read_and_wait(self.ser,2)
         self.ser.write(bytes("HERE LIFT\r", "Ascii")), read_and_wait(self.ser,2)
         self.ser.write(bytes("SETPVC LIFT Z " + str(z_lift) + "\r", "Ascii")), read_and_wait(self.ser,2)
         self.ser.write(bytes("SPEED 10\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("MOVE LIFT \r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("MOVE LIFT \r", "Ascii")), read_and_wait(self.ser,2)  
 
-
-        
-
+    # Adjust points to robot's referencial
     def init_points(self,origin,path):
-        """ adjust points to robot's referencial """
         _,coord = path.shape
         for i in range(coord):
             path[:,i] = path[:,i] + origin[i] 
-        
+
+       # Create vector with all the points to draw
     def create_path (self,path):
-        """ create position vector """
         points,_ = path.shape
         self.ser.write(bytes("DIMP PATH[" + str(points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
 
+    # Initialize the robot
     def initialize(self):
         self.ser.write(bytes("HOME\r", "Ascii")), read_and_wait(self.ser,2)
         time.sleep(120)
@@ -74,47 +80,27 @@ class action(object):
         self.ser.write(bytes("SPEED 10\r", "Ascii")), read_and_wait(self.ser,2)
         self.ser.write(bytes("MOVE INIT\r", "Ascii")), read_and_wait(self.ser,2)
 
-
-
-
-
+    # sets values to the coordinates of a point
     def add_waypoint(self,path, coord, point,z_rest):
-        """ sets values to the coordinates of a point """
-        # path -> position vector
-        # coord -> vector containing coordinates
-        #point -> current point
-        #print(point)
         self.ser.write(bytes("HERE PATH[" + str(point+1) + "]\r", "Ascii")), read_and_wait(self.ser,2)
-        for i in range(len(coord)): #ONLY X AND Y
+        for i in range(len(coord)): #Only X and Y
             self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] " + str(coord[i]) + " " + str(path[point][i]) + "\r", "Ascii")), read_and_wait(self.ser,2)
         self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] Z " + str(z_rest) + "\r", "Ascii")), read_and_wait(self.ser,2)
 
+    # Sets values to the coordinates of a point
     def move_path (self, points):
-        """ teach, move and assign point """
-        #self.ser.write(bytes("MOVE PATH[1] \r","Ascii")), read_and_wait(self.ser,2)
         time = points * 0.7 * 100
         time = np.ceil(time)
         time_ = time.astype(np.int32)
-
         self.ser.write(bytes("MOVES PATH 1 " + str(points) + " " + str(time_) + "\r","Ascii")), read_and_wait(self.ser,2)
         
         ser.sleep(time + 1)
-
-        #final
-        #self.ser.write(bytes("DELP PATH\r","Ascii")), read_and_wait(self.ser,2)
-        #self.ser.write(bytes("YES\r", "Ascii")), read_and_wait(self.ser,2)
-        #self.ser.write(bytes("DELP LIFT\r", "Ascii")), read_and_wait(self.ser,2)
-        #self.ser.write(bytes("YES\r", "Ascii")), read_and_wait(self.ser,2)
-
-
         
-
-
-
+    # Calibrate the robot by 
+    # reading the original position of the pen
+    # transform into cartesian coordiantes
     def manual_calibrate(self):
-
         position = self.ser.write(bytes("LISTPV POSITION\r", "Ascii"))
-        #read_and_wait(self.ser,2)
         self.ser.readline() # discard
         self.ser.readline() # discard
         position_string = self.ser.readline() # read cartesian coordinates
@@ -122,14 +108,8 @@ class action(object):
         print(output)
         ref = []
 
-
         coordinates = re.findall(r"[-+]?(?:\d*\.*\d+)", output)        
         for ii in range(len(coordinates)):
             ref.append(int(coordinates[ii]))
 
         return ref
-
-
-
-
-
