@@ -233,6 +233,7 @@ class reference(object):
 
         path_x = []
         path_y = []
+        path_roll = []
         for line in path_sorted:
             x,y  = np.array(line).T
             x = x.T.flatten()
@@ -248,10 +249,20 @@ class reference(object):
             path_x = np.concatenate((path_x, x))
             path_y = np.concatenate((path_y, y))
         
+        for ii in range(len(path_x)-1):
+            angle = math.atan2(path_y[ii+1]- path_y[ii], path_x[ii+1] - path_x[ii]) 
+            angle = angle * 1800 / math.pi #multiply by 10 bc scorbot
+            angle = np.round(angle)
+            angle = angle.astype(np.int32)
+
+            path_roll.append(angle)
+        
+        path_roll.append(0)
+        
         if trajectory_plot: 
             trajectory_gif(self.image, path_x, path_y)
         path_x, path_y = self.normalize(path_x,path_y)
-        return path_x, path_y
+        return path_x, path_y, path_roll
     
     # Reduze the size of the image by a A5 paper multiplied by 0.8
     # A5 dimensions y 1480 x 2100 tenths of mm

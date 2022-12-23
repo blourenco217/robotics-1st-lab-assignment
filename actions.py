@@ -40,6 +40,7 @@ class action(object):
     # Open the serial port NAME_PORT  to communicate with the robot
     def __init__(self):
         self.ser = serial.Serial('COM3', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        self.ser.flush()
         # erase memory
         # home position
 
@@ -90,11 +91,16 @@ class action(object):
             path[:,i] = path[:,i] + origin[i] 
 
     # Create vector with all the points to draw
-    def create_path (self,path):
-        points,_ = path.shape
-        print(points)
-        points = points + 1 #includes lifting 44
-        self.ser.write(bytes("DIMP PATH[" + str(points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+    def create_path (self,path,roll):
+        n_points,_ = path.shape
+        print("n_points dentro create path")
+        print(n_points)
+        if roll:
+            n_points = n_points*2 + 1 #includes lifting 44
+        else: 
+            n_points = n_points + 1
+
+        self.ser.write(bytes("DIMP PATH[" + str(n_points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
   
     # sets values to the coordinates of a point
     def add_waypoint(self,path, coord, point,z_rest):
@@ -104,6 +110,21 @@ class action(object):
         self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] Z " + str(z_rest) + "\r", "Ascii")), read_and_wait(self.ser,2)
     #if points = final
 
+    def add_waypoint_roll(self,path, coord, point, point_robot,  roll, z_rest):
+        self.ser.write(bytes("HERE PATH[" + str(point_robot) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+        for i in range(len(coord)): #Only X and Y
+            self.ser.write(bytes("SETPVC PATH[" + str(point_robot) + "] " + str(coord[i]) + " " + str(path[point][i]) + "\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPVC PATH[" + str(point_robot) + "] Z " + str(z_rest) + "\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPVC PATH[" + str(point_robot) + "] R " + str(roll) + "\r", "Ascii")), read_and_wait(self.ser,2) 
+
+    #if points = final
+
+    def add_lift_pen_roll(self,path, coord, point, point_robot, z_lift): #point = 43
+        self.ser.write(bytes("HERE PATH[" + str(point_robot) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+        for i in range(len(coord)): #Only X and Y
+            self.ser.write(bytes("SETPVC PATH[" + str(point_robot) + "] " + str(coord[i]) + " " + str(path[point-1][i]) + "\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPVC PATH[" + str(point_robot) + "] Z " + str(z_lift) + "\r", "Ascii")), read_and_wait(self.ser,2)
+
     def add_lift_pen(self,path, coord, point,z_lift): #point = 43
         self.ser.write(bytes("HERE PATH[" + str(point+1) + "]\r", "Ascii")), read_and_wait(self.ser,2)
         for i in range(len(coord)): #Only X and Y
@@ -112,7 +133,7 @@ class action(object):
 
     # Sets values to the coordinates of a point
     def move_path (self, points):
-        points = points + 1 # includes lifting pen 44
+        points = points + 1 # includes lifting pen 44 ROLLLLLLLLLL
         exc_time = points * 0.8 * 100 # 0.7 seconds per point
         exc_time = np.ceil(exc_time)
         exc_time_int = exc_time.astype(np.int32)
@@ -121,7 +142,17 @@ class action(object):
         time.sleep(exc_time)
         print("after wait")
 
-    
+    def move_path_roll (self, points):
+        points = points*2 + 1 # includes lifting pen 44 ROLLLLLLLLLL
+        exc_time = points * 0.8 * 100 # 0.7 seconds per point
+        exc_time = np.ceil(exc_time)
+        #exc_time_int = exc_time.astype(np.int32)
+        for i in range(1, points):
+            self.ser.write(bytes("MOVE PATH [" + str(i) + "]\r","Ascii")), read_and_wait(self.ser,2)
+        exc_time = exc_time / 100
+        time.sleep(exc_time)
+        print("after wait")
+
     def disconnect(self):
 
         # delete used variables
