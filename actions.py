@@ -39,7 +39,7 @@ class action(object):
 
     # Open the serial port NAME_PORT  to communicate with the robot
     def __init__(self):
-        self.ser = serial.Serial('COM5', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        self.ser = serial.Serial('COM4', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         self.ser.flush()
         # erase memory
         # home position

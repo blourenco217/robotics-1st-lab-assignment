@@ -44,16 +44,16 @@ def main():
     # based on laboratory measurements
     z_rest = 1154
     z_lift = 1400
-
     roll_curr = -201
+    point_robot = 1 # dont change
+
 
     # connection with the robot
     robot = 1
     # manual mode -> move teach pendant to initial position
-    manual = 0
-
-    roll = 1
-    point_robot = 1
+    manual = 1
+    #roll
+    roll = 0
 
 
     act = action()
@@ -62,7 +62,7 @@ def main():
     if manual == 1:
         origin = act.manual_calibrate()
     else: 
-        origin = act.initialize(home=True) # goes to safe position
+        origin = act.initialize() # goes to safe position
 
     act.init_points(origin,path)
     act.create_path(path,roll)
@@ -81,7 +81,7 @@ def main():
             act.add_waypoint_roll(path,coord,i,point_robot,path_roll[i],z_rest)
         
         point_robot = point_robot + 1
-        act.add_lift_pen_roll(path,coord,n_points,point_robot,z_lift) #points = 43
+        act.add_lift_pen_roll(path,coord,n_points,point_robot,z_lift) #points = 43 OLLHAR MELHOR
         act.move_path_roll(n_points)
     
     else:
