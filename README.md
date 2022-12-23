@@ -3,7 +3,7 @@ Solution to the Laboratory Assignment 1 submitted in partial fulfillment of the 
 
 
 ## Execution Guidelines
-
+# Instructions
 ## Trajectory Planning
 ![](trajectory_planning.gif)
 

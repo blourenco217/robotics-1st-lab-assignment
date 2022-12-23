@@ -111,7 +111,7 @@ def trajectory_gif(image, x, y):
     for ii in range(len(x)):
         filename = f'{ii}.png'
         filenames.append(filename)
-        plt.scatter(x[ii], y[ii], color = 'blue')
+        plt.scatter(x[ii], y[ii])
         plt.savefig(filename)
         plt.pause(0.01)
     plt.show()
@@ -124,82 +124,7 @@ def trajectory_gif(image, x, y):
     for filename in set(filenames):
         os.remove(filename)
 
-# Reduze the number of points to be drawn
-# Considering 
-# If is a straight line - only the start/end point need to be represented
-# If is a curve line, consider each point based on the angle between 2 points of the curve
-# just in case f
-def sampling(self, x, y):
-    x_new = []
-    y_new = []
-    theta_threshold_min = 15 * math.pi/180
-    theta_threshold_max = 165 * math.pi/180
-    x_new.append(x[0])
-    y_new.append(y[0])
-    for ii in range(len(x)-2):
-        ag = angle(x_new[-1], y_new[-1], x[ii+1], y[ii+1], x[ii+2], y[ii+2])
-        if  ag > theta_threshold_min and ag < theta_threshold_max:
-            x_new.append(x[ii + 1])
-            y_new.append(y[ii + 1])
-        # else:
-        #     x = np.delete(x, ii + 1)
-        #     y = np.delete(y, ii + 1)
-        #     ii = ii - 1
-    x_new.append(x[-1])
-    y_new.append(y[-1])
-    return x_new, y_new
 
-# Reduze the size of the image by a A5 paper multiplied by 1.5 
-# A5 dimensions y 1480 x 2100 tenths of mm
-def normalize(self,x_, y_):
-    # A5 dimensions
-    h_paper = 1480 * 1.5
-    w_paper =  2100 * 1.5
-    
-    # image dimensions
-    h_image, w_image = self.original_image.shape #y,x
-    x = np.zeros(len(x_))
-    y = np.zeros(len(y_))
-
-    # get coordinates vector
-    for i in range(len(x_)):
-        x[i] = int(x_[i])
-        y[i] = int(y_[i])
-
-    # Resize to width of paper if the image's width is bigger than the paper's 
-    if w_image > w_paper: 
-        x = x * w_paper / w_image 
-        y = y * w_paper / w_image
-        h = h_image * w_paper / w_image #height of the image just after resizing
-        # After resizing, the height of the image is still bigger 
-        # than the dimensions of the paper, the image is scaled down.
-        if h > h_paper: 
-            x = x * h_paper / h_image
-            y = y * h_paper / h_image
-
-    # Resize to height of paper if the image's height is bigger than the paper's 
-    elif h_image > h_paper:
-        x = x * h_paper / h_image
-        y = y * h_paper / h_image
-        w = w_image * h_paper / h_image #width of the image just after resizing
-        # After resizing, the width of the image is still bigger 
-        # than the dimensions of the paper, the image is scaled down.
-        if w > w_paper:
-            x = x * w_paper / w_image
-            y = y * w_paper / w_image
-
-    # ceil the new vectors created
-    y = np.ceil(y)
-    x = np.ceil(x)
- 
-    x = x - x[0]
-    y = - y
-    y = y - y[0]
-
-    x = x.astype(np.int32)
-    y = y.astype(np.int32)
-
-    return x, y
 
 class reference(object):
     """ class for the logic of the trajectory planning """
@@ -211,9 +136,9 @@ class reference(object):
         self.image_processing()
     
     def image_processing(self):
-        self.image = cv2.copyMakeBorder(self.image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value = 255) #To guarantee that the windows don't go out of the image's limits
+        self.image = cv2.copyMakeBorder(self.image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value = 255) # To guarantee that the windows don't go out of the image's limits
         _, self.image = cv2.threshold(self.image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV) 
-        self.image = cv2.ximgproc.thinning(self.image) #Takes the binary image and contracts the foreground until only single-pixel wide lines remain
+        self.image = cv2.ximgproc.thinning(self.image) # Takes the binary image and contracts the foreground until only single-pixel wide lines remain
     
     # Locate the key points on the image
     def features2track(self, trajectory_plot = False):
@@ -255,27 +180,35 @@ class reference(object):
             for point in good_features:
                 if (cdist(np.array(path_cont).reshape(-1,2), point.reshape(-1,2)) < 20).any() :
                     good_features_c.append(point)
-
+         
             # If a biforcation point or a end point is found
-            if len(good_features_c)==0 or len(good_features_c) == 1: 
+            if len(good_features_c)==0:
+                cleaned_up_path = path_cont[0: round(len(path_cont)/2)]
+                pass
+            elif len(good_features_c) == 1: 
                 # Look for the nearst point that is a beggning or the end of a contour
                 a = nearest_index(np.array(path_cont), good_features_c[0])
                 # Clean the path to know that the point was visited
-                cleaned_up_path = path_cont[a:a + round(len(path_cont)/2)]
+                cleaned_up_path = path_cont[a : a + round(len(path_cont)/2)]
             # If was not found a key point, the trajectory keeps going finding the closest point
             else:
                 a = nearest_index(np.array(path_cont), good_features_c[0])
                 b = nearest_index(np.array(path_cont), good_features_c[1])
+
+
                 if a > b:
-                    cleaned_up_path = path_cont[b: a]
+                    cleaned_up_path = path_cont[b : a]       
                     cleaned_up_path.reverse()
                 else:
-                    cleaned_up_path = path_cont[a: b]
+                    cleaned_up_path = path_cont[a : b]
                     cleaned_up_path.reverse()
             path_unsorted.append(cleaned_up_path)
 
         path_sorted = [ path_unsorted.pop(0) ] # Initialize sorted path with first contour
         pcurr  = path_sorted[-1][-1] 
+        
+        
+        # plt.show()
 
         while len(path_unsorted)>0:
             sorted = False
@@ -289,7 +222,6 @@ class reference(object):
 
             if sorted: index = index - 1
             if np.linalg.norm(np.array(path_unsorted[index][0]) - np.array(pcurr), axis=1) > 200:
-                print('backtrak')
                 add_on = path_unsorted.pop(index).copy()
                 add_on.reverse()
                 path_sorted.append(add_on)
@@ -301,17 +233,99 @@ class reference(object):
 
         path_x = []
         path_y = []
-        original_image = cv2.bitwise_not(self.image)
-        plt.imshow(original_image, aspect="auto", cmap="gray")
         for line in path_sorted:
             x,y  = np.array(line).T
-            x = x.T.flatten()[::200]
-            y = y.T.flatten()[::200]
+            x = x.T.flatten()
+            last_x = x[-1]
+            x = x[:-1:200]
+            y = y.T.flatten()
+            last_y = y[-1]
+            y =y[:-1:200]
+            x = np.append(x, last_x)
+            y = np.append(y, last_y)
 
-            x, y = sampling(self,x,y)
+            x, y = self.sampling(x,y)
             path_x = np.concatenate((path_x, x))
             path_y = np.concatenate((path_y, y))
-        path_x, path_y = normalize(self, path_x,path_y)
-        plt.scatter(path_x, path_y) 
-        if trajectory_plot: trajectory_gif(self.image, path_x, path_y)
+        
+        if trajectory_plot: 
+            trajectory_gif(self.image, path_x, path_y)
+        path_x, path_y = self.normalize(path_x,path_y)
         return path_x, path_y
+    
+    # Reduze the size of the image by a A5 paper multiplied by 0.8
+    # A5 dimensions y 1480 x 2100 tenths of mm
+    def normalize(self,x_, y_):
+        # A5 dimensions
+        h_paper = 1480 * 1.2
+        w_paper =  2100 * 1.2
+        
+        # image dimensions
+        h_image, w_image = self.original_image.shape #y,x
+        x = np.zeros(len(x_))
+        y = np.zeros(len(y_))
+
+        # get coordinates vector
+        for i in range(len(x_)):
+            x[i] = int(x_[i])
+            y[i] = int(y_[i])
+
+        # Resize to width of paper if the image's width is bigger than the paper's 
+        if w_image > w_paper: 
+            x = x * w_paper / w_image 
+            y = y * w_paper / w_image
+            h = h_image * w_paper / w_image #height of the image just after resizing
+            # After resizing, the height of the image is still bigger 
+            # than the dimensions of the paper, the image is scaled down.
+            if h > h_paper: 
+                x = x * h_paper / h_image
+                y = y * h_paper / h_image
+
+        # Resize to height of paper if the image's height is bigger than the paper's 
+        elif h_image > h_paper:
+            x = x * h_paper / h_image
+            y = y * h_paper / h_image
+            w = w_image * h_paper / h_image #width of the image just after resizing
+            # After resizing, the width of the image is still bigger 
+            # than the dimensions of the paper, the image is scaled down.
+            if w > w_paper:
+                x = x * w_paper / w_image
+                y = y * w_paper / w_image
+
+        # ceil the new vectors created
+        y = np.ceil(y)
+        x = np.ceil(x)
+    
+        x = x - x[0]
+        y = - y
+        y = y - y[0]
+
+        x = x.astype(np.int32)
+        y = y.astype(np.int32)
+
+        return x, y
+
+    # Reduze the number of points to be drawn
+    # Considering 
+    # If is a straight line - only the start/end point need to be represented
+    # If is a curve line, consider each point based on the angle between 2 points of the curve
+    # just in case f
+    def sampling(self, x, y):
+        x_new = []
+        y_new = []
+        theta_threshold_min = 10 * math.pi/180
+        theta_threshold_max = 170 * math.pi/180
+        x_new.append(x[0])
+        y_new.append(y[0])
+        for ii in range(len(x)-2):
+            ag = angle(x_new[-1], y_new[-1], x[ii+1], y[ii+1], x[ii+2], y[ii+2])
+            if  ag > theta_threshold_min and ag < theta_threshold_max:
+                x_new.append(x[ii + 1])
+                y_new.append(y[ii + 1])
+            # else:
+            #     x = np.delete(x, ii + 1)
+            #     y = np.delete(y, ii + 1)
+            #     ii = ii - 1
+        x_new.append(x[-1])
+        y_new.append(y[-1])
+        return x_new, y_new

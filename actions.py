@@ -42,60 +42,7 @@ class action(object):
         self.ser = serial.Serial('COM3', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         # erase memory
         # home position
-    
-    # When all of the points have been processed
-    # set the pen's z position to write in the paper
-    def lift_pen(self, z_lift):
-        #z_lift = 1400
-        self.ser.write(bytes("DEFP LIFT\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("HERE LIFT\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPVC LIFT Z " + str(z_lift) + "\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SPEED 10\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("MOVE LIFT \r", "Ascii")), read_and_wait(self.ser,2)  
 
-    # Adjust points to robot's referencial
-    def init_points(self,origin,path):
-        _,coord = path.shape
-        for i in range(coord):
-            path[:,i] = path[:,i] + origin[i] 
-
-       # Create vector with all the points to draw
-    def create_path (self,path):
-        points,_ = path.shape
-        self.ser.write(bytes("DIMP PATH[" + str(points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
-
-    # Initialize the robot
-    def initialize(self):
-        self.ser.write(bytes("HOME\r", "Ascii")), read_and_wait(self.ser,2)
-        time.sleep(120)
-        #1: 2441    2: 2153    3:-10311   4:-14394   5: 189
-        #X: 5007    Y: 483     Z: 1351    P:-859     R:-184
-        self.ser.write(bytes("DEFP INIT\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("HERE INIT\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPV INIT 1 2441\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPV INIT 2 2153\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPV INIT 3 -10311\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPV INIT 4 -14394\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPV INIT 5 189\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SPEED 10\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("MOVE INIT\r", "Ascii")), read_and_wait(self.ser,2)
-
-    # sets values to the coordinates of a point
-    def add_waypoint(self,path, coord, point,z_rest):
-        self.ser.write(bytes("HERE PATH[" + str(point+1) + "]\r", "Ascii")), read_and_wait(self.ser,2)
-        for i in range(len(coord)): #Only X and Y
-            self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] " + str(coord[i]) + " " + str(path[point][i]) + "\r", "Ascii")), read_and_wait(self.ser,2)
-        self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] Z " + str(z_rest) + "\r", "Ascii")), read_and_wait(self.ser,2)
-
-    # Sets values to the coordinates of a point
-    def move_path (self, points):
-        time = points * 0.7 * 100
-        time = np.ceil(time)
-        time_ = time.astype(np.int32)
-        self.ser.write(bytes("MOVES PATH 1 " + str(points) + " " + str(time_) + "\r","Ascii")), read_and_wait(self.ser,2)
-        
-        ser.sleep(time + 1)
-        
     # Calibrate the robot by 
     # reading the original position of the pen
     # transform into cartesian coordiantes
@@ -113,3 +60,75 @@ class action(object):
             ref.append(int(coordinates[ii]))
 
         return ref
+
+     # Initialize the robot
+    def initialize(self, home = False):
+        if home:
+            self.ser.write(bytes("HOME\r", "Ascii")), read_and_wait(self.ser,2)
+            time.sleep(150)
+
+        origin = np.array([5007, 483, 1351, -859, -184])
+        # save position defined based on laboratory measurements as
+        #1: 2441    2: 2153    3:-10311   4:-14394   5: 189
+        #X: 5007    Y: 483     Z: 1351    P:-859     R:-184
+        self.ser.write(bytes("DEFP INIT\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("HERE INIT\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPV INIT 1 2441\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPV INIT 2 2153\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPV INIT 3 -10311\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPV INIT 4 -14394\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPV INIT 5 189\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SPEED 10\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("MOVE INIT\r", "Ascii")), read_and_wait(self.ser,2)
+
+        return origin
+
+    # Adjust points to robot's referencial
+    def init_points(self,origin,path):
+        _,coord = path.shape
+        for i in range(coord):
+            path[:,i] = path[:,i] + origin[i] 
+
+    # Create vector with all the points to draw
+    def create_path (self,path):
+        points,_ = path.shape
+        print(points)
+        points = points + 1 #includes lifting 44
+        self.ser.write(bytes("DIMP PATH[" + str(points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+  
+    # sets values to the coordinates of a point
+    def add_waypoint(self,path, coord, point,z_rest):
+        self.ser.write(bytes("HERE PATH[" + str(point+1) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+        for i in range(len(coord)): #Only X and Y
+            self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] " + str(coord[i]) + " " + str(path[point][i]) + "\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] Z " + str(z_rest) + "\r", "Ascii")), read_and_wait(self.ser,2)
+    #if points = final
+
+    def add_lift_pen(self,path, coord, point,z_lift): #point = 43
+        self.ser.write(bytes("HERE PATH[" + str(point+1) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+        for i in range(len(coord)): #Only X and Y
+            self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] " + str(coord[i]) + " " + str(path[point-1][i]) + "\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("SETPVC PATH[" + str(point+1) + "] Z " + str(z_lift) + "\r", "Ascii")), read_and_wait(self.ser,2)
+
+    # Sets values to the coordinates of a point
+    def move_path (self, points):
+        points = points + 1 # includes lifting pen 44
+        exc_time = points * 0.8 * 100 # 0.7 seconds per point
+        exc_time = np.ceil(exc_time)
+        exc_time_int = exc_time.astype(np.int32)
+        self.ser.write(bytes("MOVES PATH 1 " + str(points) + " " + str(exc_time_int) + "\r","Ascii")), read_and_wait(self.ser,2)
+        exc_time = exc_time / 100
+        time.sleep(exc_time)
+        print("after wait")
+
+    
+    def disconnect(self):
+
+        # delete used variables
+        self.ser.write(bytes("DELP PATH\r","Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("YES\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("DELP INIT\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("YES\r", "Ascii")), read_and_wait(self.ser,2)
+
+        # closed connection
+        self.ser.close()
