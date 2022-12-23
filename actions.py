@@ -39,7 +39,7 @@ class action(object):
 
     # Open the serial port NAME_PORT  to communicate with the robot
     def __init__(self):
-        self.ser = serial.Serial('COM3', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
+        self.ser = serial.Serial('COM5', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         self.ser.flush()
         # erase memory
         # home position
@@ -86,6 +86,7 @@ class action(object):
 
     # Adjust points to robot's referencial
     def init_points(self,origin,path):
+        print('Adjusting to the r')
         _,coord = path.shape
         for i in range(coord):
             path[:,i] = path[:,i] + origin[i] 
@@ -94,7 +95,6 @@ class action(object):
     def create_path (self,path,roll):
         n_points,_ = path.shape
         print("n_points dentro create path")
-        print(n_points)
         if roll:
             n_points = n_points*2 + 1 #includes lifting 44
         else: 

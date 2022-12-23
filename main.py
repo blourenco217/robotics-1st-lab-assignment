@@ -39,8 +39,6 @@ def main():
     path_roll = path_roll[0:dim]
 
     n_points,_= path.shape # points = 43
-    print(n_points)
-    print(path.shape) #6,3
 
     # defined the z-positions of rest and lift
     # based on laboratory measurements
@@ -64,7 +62,7 @@ def main():
     if manual == 1:
         origin = act.manual_calibrate()
     else: 
-        origin = act.initialize() # goes to safe position
+        origin = act.initialize(home=True) # goes to safe position
 
     act.init_points(origin,path)
     act.create_path(path,roll)
