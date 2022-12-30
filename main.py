@@ -18,6 +18,7 @@ def main():
     # as terminal console)
     ############################################################################
 
+    """ arguments on command line """
     parser = argparse.ArgumentParser(description = 'Read in a a file drawing.')
     parser.add_argument('-i', '--imgpath', help = 'image path')
     # parser.add_argument('-m', '--manual', help = 'calibration') #can be manual or automatic
@@ -28,7 +29,7 @@ def main():
     serString = "" # Used to hold data coming over UART
     coord = np.array(["X","Y"], dtype = str)
 
-    # create the path by trajectory planning
+    """" create the path by trajectory planning """
     ref = reference(args['imgpath'])
     path_x,path_y, path_roll = ref.features2track() 
     path = np.array([path_x,path_y]) 
@@ -38,22 +39,19 @@ def main():
     path = path[0:dim]
     path_roll = path_roll[0:dim]
 
-    n_points,_= path.shape # points = 43
+    n_points,_= path.shape 
 
-    # defined the z-positions of rest and lift
-    # based on laboratory measurements
+    """ defined the z-positions of rest and lift based on laboratory measurements """
     z_rest = 1154
     z_lift = 1400
     roll_curr = -201
-    point_robot = 1 # dont change
+    point_robot = 1 # first point of the robot
 
 
-    # connection with the robot
+    """ arguments for defining the connection with the robot """
     robot = 1
-    # manual mode -> move teach pendant to initial position
-    manual = 1
-    #roll
-    roll = 0
+    manual = 1 # manual mode -> move teach pendant to initial position
+    roll = 0   # roll's coordinates -> 0 not used, 1 used
 
 
     act = action()
@@ -69,30 +67,29 @@ def main():
 
     """" specific movement functions for roll activated """
     if roll:
-        act.add_waypoint_roll(path,coord,0,point_robot,roll_curr,z_rest) #point_robot=1
+        act.add_waypoint_roll(path,coord,0,point_robot,roll_curr,z_rest) # 1st point of the robot -> setting the current roll
         point_robot = point_robot + 1
         path_roll[0] = path_roll[0] + roll_curr
-        act.add_waypoint_roll(path,coord,0,point_robot, path_roll[0], z_rest) #point_robot=2
+        act.add_waypoint_roll(path,coord,0,point_robot, path_roll[0], z_rest) # 2nd point of the robot -> move to the next point with the current roll
         for i in range(1,n_points): 
-            point_robot = point_robot + 1 #point_robot=3
-            act.add_waypoint_roll(path,coord,i, point_robot, path_roll[i-1],z_rest)
+            point_robot = point_robot + 1 
+            act.add_waypoint_roll(path,coord,i, point_robot, path_roll[i-1],z_rest) # set the new roll's coordinate
             path_roll[i] = path_roll[i] + path_roll[i-1]
             point_robot = point_robot + 1
-            act.add_waypoint_roll(path,coord,i,point_robot,path_roll[i],z_rest)
+            act.add_waypoint_roll(path,coord,i,point_robot,path_roll[i],z_rest) # moving with the previous roll's coordindate defined
         
         point_robot = point_robot + 1
-        act.add_lift_pen_roll(path,coord,n_points,point_robot,z_lift) #points = 43 OLLHAR MELHOR
+        act.add_lift_pen_roll(path,coord,n_points,point_robot,z_lift) 
         act.move_path_roll(n_points)
     
     else:
         for i in range(n_points): 
             act.add_waypoint(path,coord,i,z_rest)
         
-        act.add_lift_pen(path,coord,n_points,z_lift) #points = 43
+        act.add_lift_pen(path,coord,n_points,z_lift) 
         act.move_path(n_points)
 
         act.disconnect()
     
-########################################################################
 if __name__ == '__main__':
     main()

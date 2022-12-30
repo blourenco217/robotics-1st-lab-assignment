@@ -7,8 +7,6 @@
     # - organize the paths based on the key points
 ############################################################################
 
-# Robotics 22-23, Lab1 serial communications with the Scorbot example
-
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -17,11 +15,11 @@ import imageio
 import os
 import math
 
-# Returns the unit norm of a vector
+""" Returns the unit norm of a vector """ 
 def unit_vector(vector):
     return vector / np.linalg.norm(vector)
 
-# Measure the angle between 2 vectors from the arguments
+""" Measure the angle between 2 vectors from the arguments"""
 def angle(x1, y1, x2, y2, x3, y3):
     dir1 = np.array([x3-x2, y3-y2]) #vector from point 1 to 3
     dir2 = np.array([x2-x1, y2-y1]) #vector from point 1 to 2
@@ -30,12 +28,11 @@ def angle(x1, y1, x2, y2, x3, y3):
     dir2 = np.squeeze(unit_vector(dir2))
     return np.arccos(np.clip(np.dot(dir1, dir2), -1.0, 1.0))
 
-# Count the number of non-zero pixels around the 
-# pixel under study with a window of 1-pixel width
+""" Count the number of non-zero pixels around the pixel under study with a window of 1-pixel width """
 def count_around(image,x,y,win): 
     count = 0
-    w = len(image[0]) #number of pixels in x
-    l = len(image) #number of pixels in y
+    w = len(image[0]) # number of pixels in x
+    l = len(image) # number of pixels in y
     
     for i in range(-win,win+1): #-1 to 1, -2 to 2
         if i == -win or i == win:
@@ -49,12 +46,12 @@ def count_around(image,x,y,win):
 
     return count
 
-# CASE 1    
-# Check to see if there is one pixel in each window
-# If there is, that is taken as an indication of the end
-# CASE 2
-# If more than 1 pixel is found in additional windows, 
-# the point is not considered to be the end point
+""" CASE 1    
+    Check to see if there is one pixel in each window
+    If there is, that is taken as an indication of the end """
+""" CASE 2
+    If more than 1 pixel is found in additional windows, 
+    the point is not considered to be the end point """
 def check_end(image,x,y):
     end_pnt=0
 
@@ -75,8 +72,8 @@ def check_end(image,x,y):
 
     return end_pnt
 
-# Verify whether each window contains more than 2 pixels
-# If there is, it is interpreted as evidence of a bifurcation point
+""" Verify whether each window contains more than 2 pixels 
+    If there is, it is interpreted as evidence of a bifurcation point """
 def check_biforc(image,x,y):
     biforc=0
 
@@ -95,14 +92,14 @@ def check_biforc(image,x,y):
                                 
     return biforc
 
-# Check if there is just 1 pixel inside each window """
+""" Check if there is just 1 pixel inside each window """
 def nearest_index(array, value):
     value_ = value.reshape(-1,2)
     array_ = array.reshape(-1,2)
     idx = cdist(array_,value_).argmin()
     return idx
 
-# Plot the trajectory
+""" Plot the trajectory as a GIF """
 def trajectory_gif(image, x, y):
     plt.close()
     original_image = cv2.bitwise_not(image)
@@ -125,27 +122,27 @@ def trajectory_gif(image, x, y):
         os.remove(filename)
 
 
-
+""" class for the logic of the trajectory planning """
 class reference(object):
-    """ class for the logic of the trajectory planning """
-    
-    # Read the image in grey scale 
+    """ read the image in grey scale """
     def __init__(self, file_name = 'images/test_draw_2.png'):
         self.image = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE) 
         self.original_image = self.image
         self.image_processing()
     
+    """ pre-processing of the image """
     def image_processing(self):
         self.image = cv2.copyMakeBorder(self.image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value = 255) # To guarantee that the windows don't go out of the image's limits
         _, self.image = cv2.threshold(self.image, 128, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY_INV) 
         self.image = cv2.ximgproc.thinning(self.image) # Takes the binary image and contracts the foreground until only single-pixel wide lines remain
     
-    # Locate the key points on the image
+    """ construct the trajectory planning """
     def features2track(self, trajectory_plot = False):
+        """ locate the key points on the image """
         points = cv2.findNonZero(self.image)
         end_pnts=[]
 
-        # Find endpoints
+        """ find endpoints """
         for i in points:
             x,y = i.ravel()
             if check_end(self.image,x,y):
@@ -155,7 +152,7 @@ class reference(object):
         biforc_pnts = []
         tresh = 10 # window to delete
 
-        # Find biforcation points
+        """ find biforcation points """
         for i in points:
             x,y = i.ravel()
             if check_biforc(self.image,x,y):
@@ -169,32 +166,31 @@ class reference(object):
         i = 0
         path_unsorted = []
 
-        # Find the contours
+        """ find the contours """
         contours, _ = cv2.findContours(self.image, cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE) 
 
-        # Trajectory's order
+        """ trajectory's order """
         for contour in contours:            
             path_cont = [i[:] for i in contour]
-            good_features_c = [] # Good features in each contour
-            # Add the key points into a vector
+            good_features_c = [] # good features in each contour
+            # add the key points into a vector
             for point in good_features:
                 if (cdist(np.array(path_cont).reshape(-1,2), point.reshape(-1,2)) < 20).any() :
                     good_features_c.append(point)
          
-            # If a biforcation point or a end point is found
+            # if a biforcation point or a end point is found
             if len(good_features_c)==0:
                 cleaned_up_path = path_cont[0: round(len(path_cont)/2)]
                 pass
             elif len(good_features_c) == 1: 
-                # Look for the nearst point that is a beggning or the end of a contour
+                # look for the nearst point that is a beggning or the end of a contour
                 a = nearest_index(np.array(path_cont), good_features_c[0])
-                # Clean the path to know that the point was visited
+                # clean the path to know that the point was visited
                 cleaned_up_path = path_cont[a : a + round(len(path_cont)/2)]
-            # If was not found a key point, the trajectory keeps going finding the closest point
+            # if was not found a key point, the trajectory keeps going finding the closest point
             else:
                 a = nearest_index(np.array(path_cont), good_features_c[0])
                 b = nearest_index(np.array(path_cont), good_features_c[1])
-
 
                 if a > b:
                     cleaned_up_path = path_cont[b : a]       
@@ -204,12 +200,9 @@ class reference(object):
                     cleaned_up_path.reverse()
             path_unsorted.append(cleaned_up_path)
 
-        path_sorted = [ path_unsorted.pop(0) ] # Initialize sorted path with first contour
+        path_sorted = [ path_unsorted.pop(0) ] # initialize sorted path with first contour
         pcurr  = path_sorted[-1][-1] 
         
-        
-        # plt.show()
-
         while len(path_unsorted)>0:
             sorted = False
             for ii in range(len(path_unsorted)):
@@ -234,6 +227,7 @@ class reference(object):
         path_x = []
         path_y = []
         path_roll = []
+
         for line in path_sorted:
             x,y  = np.array(line).T
             x = x.T.flatten()
@@ -250,8 +244,8 @@ class reference(object):
             path_y = np.concatenate((path_y, y))
         
         for ii in range(len(path_x)-1):
-            angle = math.atan2(path_y[ii+1]- path_y[ii], path_x[ii+1] - path_x[ii]) 
-            angle = angle * 1800 / math.pi #multiply by 10 bc scorbot
+            angle = math.atan2(path_y[ii+1]- path_y[ii], path_x[ii+1] - path_x[ii]) # arctang2 is used to calculate roll's angle
+            angle = angle * 1800 / math.pi # angle in rad -> degrees & multiply by 10 because in as the angles are defined in scorbot
             angle = np.round(angle)
             angle = angle.astype(np.int32)
 
@@ -264,15 +258,15 @@ class reference(object):
         path_x, path_y = self.normalize(path_x,path_y)
         return path_x, path_y, path_roll
     
-    # Reduze the size of the image by a A5 paper multiplied by 0.8
-    # A5 dimensions y 1480 x 2100 tenths of mm
+    """ increases the size of the image by a A5 paper multiplied by 1.2 """
+    """ A5 dimensions y 1480 x 2100 tenths of mm """
     def normalize(self,x_, y_):
         # A5 dimensions
         h_paper = 1480 * 1.2
         w_paper =  2100 * 1.2
         
         # image dimensions
-        h_image, w_image = self.original_image.shape #y,x
+        h_image, w_image = self.original_image.shape # y, x
         x = np.zeros(len(x_))
         y = np.zeros(len(y_))
 
@@ -281,24 +275,24 @@ class reference(object):
             x[i] = int(x_[i])
             y[i] = int(y_[i])
 
-        # Resize to width of paper if the image's width is bigger than the paper's 
+        # resize to width of paper if the image's width is bigger than the paper's 
         if w_image > w_paper: 
             x = x * w_paper / w_image 
             y = y * w_paper / w_image
-            h = h_image * w_paper / w_image #height of the image just after resizing
-            # After resizing, the height of the image is still bigger 
-            # than the dimensions of the paper, the image is scaled down.
+            h = h_image * w_paper / w_image # height of the image just after resizing
+            # after resizing, the height of the image is still bigger 
+            # than the dimensions of the paper, the image is scaled down
             if h > h_paper: 
                 x = x * h_paper / h_image
                 y = y * h_paper / h_image
 
-        # Resize to height of paper if the image's height is bigger than the paper's 
+        # resize to height of paper if the image's height is bigger than the paper's 
         elif h_image > h_paper:
             x = x * h_paper / h_image
             y = y * h_paper / h_image
-            w = w_image * h_paper / h_image #width of the image just after resizing
-            # After resizing, the width of the image is still bigger 
-            # than the dimensions of the paper, the image is scaled down.
+            w = w_image * h_paper / h_image # width of the image just after resizing
+            # after resizing, the width of the image is still bigger 
+            # than the dimensions of the paper, the image is scaled down
             if w > w_paper:
                 x = x * w_paper / w_image
                 y = y * w_paper / w_image
@@ -316,11 +310,10 @@ class reference(object):
 
         return x, y
 
-    # Reduze the number of points to be drawn
-    # Considering 
-    # If is a straight line - only the start/end point need to be represented
-    # If is a curve line, consider each point based on the angle between 2 points of the curve
-    # just in case f
+    """ reduze the number of points to be drawn """
+    """ considering  
+        - if is a straight line - only the start/end point need to be represented
+        - if is a curve line, consider each point based on a tresh angle between 2 points of the curve """
     def sampling(self, x, y):
         x_new = []
         y_new = []
@@ -333,10 +326,8 @@ class reference(object):
             if  ag > theta_threshold_min and ag < theta_threshold_max:
                 x_new.append(x[ii + 1])
                 y_new.append(y[ii + 1])
-            # else:
-            #     x = np.delete(x, ii + 1)
-            #     y = np.delete(y, ii + 1)
-            #     ii = ii - 1
+
         x_new.append(x[-1])
         y_new.append(y[-1])
+
         return x_new, y_new
