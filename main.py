@@ -1,6 +1,6 @@
 ############################################################################
     # ROBOTICS 22-23: main.py
-    # Lab1 serial communications with the Scorbot example
+    # Lab1 main programm calling the image processing and actions related to robot
 ############################################################################
 import serial
 import time
@@ -12,11 +12,6 @@ from actions import action
 
 
 def main():
-    ############################################################################
-    # ATTENTION: Each point used was previously recorded with DEFP instruction
-    #(from a terminal console - you can use, for example, putty or hyperterminal
-    # as terminal console)
-    ############################################################################
 
     """ arguments on command line """
     parser = argparse.ArgumentParser(description = 'Read in a a file drawing.')
@@ -35,28 +30,23 @@ def main():
     path = np.array([path_x,path_y]) 
     path = np.transpose(path)
 
-    dim = 3
-    path = path[0:dim]
-    path_roll = path_roll[0:dim]
-
     n_points,_= path.shape 
 
-    """ defined the z-positions of rest and lift based on laboratory measurements """
+    """ defined the z-positions of rest and lift, and roll based on laboratory measurements """
     z_rest = 1154
     z_lift = 1400
     roll_curr = -201
-    point_robot = 1 # first point of the robot
-
+    point_robot = 1 # robot's coordinates starte at index 1
 
     """ arguments for defining the connection with the robot """
-    robot = 1
+    robot = 1 # robot -> if 0 does only image processing
     manual = 1 # manual mode -> move teach pendant to initial position
     roll = 0   # roll's coordinates -> 0 not used, 1 used
 
 
     act = action()
 
-    """ pick an initialization between manual calibration on direct contact with the paper and automatic preset position """
+    """ pick an initialization between manual calibration (with pen lifted from the paper) and automatic preset position """
     if manual == 1:
         origin = act.manual_calibrate()
     else: 
@@ -81,7 +71,8 @@ def main():
         point_robot = point_robot + 1
         act.add_lift_pen_roll(path,coord,n_points,point_robot,z_lift) 
         act.move_path_roll(n_points)
-    
+
+        """" specific movement functions for normal functioning without roll """
     else:
         for i in range(n_points): 
             act.add_waypoint(path,coord,i,z_rest)

@@ -21,7 +21,7 @@ def unit_vector(vector):
 
 """ Measure the angle between 2 vectors from the arguments"""
 def angle(x1, y1, x2, y2, x3, y3):
-    dir1 = np.array([x3-x2, y3-y2]) #vector from point 1 to 3
+    dir1 = np.array([x3-x2, y3-y2]) #vector from point 2 to 3
     dir2 = np.array([x2-x1, y2-y1]) #vector from point 1 to 2
     
     dir1 = np.squeeze(unit_vector(dir1))
@@ -34,7 +34,7 @@ def count_around(image,x,y,win):
     w = len(image[0]) # number of pixels in x
     l = len(image) # number of pixels in y
     
-    for i in range(-win,win+1): #-1 to 1, -2 to 2
+    for i in range(-win,win+1): 
         if i == -win or i == win:
             for j in range(-win,win+1):
                 count += image[y+i][x+j]
@@ -42,15 +42,15 @@ def count_around(image,x,y,win):
             count += image[y+i][x-win]
             count += image[y+i][x+win]
 
-    count /= 255
+    count /= 255 # normalize
 
     return count
 
-""" CASE 1    
-    Check to see if there is one pixel in each window
+""" 1 Verification    
+    Check to see if there is only one pixel in each window
     If there is, that is taken as an indication of the end """
-""" CASE 2
-    If more than 1 pixel is found in additional windows, 
+""" 2 Verification
+    If 3 or more pixels are found in additional windows, 
     the point is not considered to be the end point """
 def check_end(image,x,y):
     end_pnt=0
@@ -72,8 +72,9 @@ def check_end(image,x,y):
 
     return end_pnt
 
-""" Verify whether each window contains more than 2 pixels 
-    If there is, it is interpreted as evidence of a bifurcation point """
+""" Verify whether each window contains more than 2 pixels/ branches
+    If there is, make sure that folllowing windows have the same number of pixels / branches """
+    
 def check_biforc(image,x,y):
     biforc=0
 
@@ -92,7 +93,7 @@ def check_biforc(image,x,y):
                                 
     return biforc
 
-""" Check if there is just 1 pixel inside each window """
+""" returns the index of the closest item of 'value' found in 'array' """
 def nearest_index(array, value):
     value_ = value.reshape(-1,2)
     array_ = array.reshape(-1,2)
@@ -138,7 +139,7 @@ class reference(object):
     
     """ construct the trajectory planning """
     def features2track(self, trajectory_plot = False):
-        """ locate the key points on the image """
+        """ locate non zero pixels on the image """
         points = cv2.findNonZero(self.image)
         end_pnts=[]
 
@@ -150,7 +151,7 @@ class reference(object):
                 end_pnts.append(i)
 
         biforc_pnts = []
-        tresh = 10 # window to delete
+        tresh = 10 # window to delete around bifurcation points
 
         """ find biforcation points """
         for i in points:
@@ -158,11 +159,11 @@ class reference(object):
             if check_biforc(self.image,x,y):
                 if (cdist(np.array(biforc_pnts).reshape(-1,2), i.reshape(-1,2)) < 5).any() : continue
                 biforc_pnts.append(i)
-                for ii in range(-tresh,tresh+1): #erase point and its neighbors
+                for ii in range(-tresh,tresh+1): #erase point and its neighbors in a certain treshold
                     for jj in range(-tresh,tresh+1):
                         self.image[y+jj][x+ii] = 0
 
-        good_features =  end_pnts + biforc_pnts
+        good_features =  end_pnts + biforc_pnts # these must be included in final sampling
         i = 0
         path_unsorted = []
 
@@ -178,21 +179,20 @@ class reference(object):
                 if (cdist(np.array(path_cont).reshape(-1,2), point.reshape(-1,2)) < 20).any() :
                     good_features_c.append(point)
          
-            # if a biforcation point or a end point is found
+            # if no biforcation point or end point is found in contour
             if len(good_features_c)==0:
                 cleaned_up_path = path_cont[0: round(len(path_cont)/2)]
                 pass
             elif len(good_features_c) == 1: 
-                # look for the nearst point that is a beggning or the end of a contour
+                # look for the nearst point that is a beggining or the end of a contour
                 a = nearest_index(np.array(path_cont), good_features_c[0])
                 # clean the path to know that the point was visited
                 cleaned_up_path = path_cont[a : a + round(len(path_cont)/2)]
-            # if was not found a key point, the trajectory keeps going finding the closest point
             else:
                 a = nearest_index(np.array(path_cont), good_features_c[0])
                 b = nearest_index(np.array(path_cont), good_features_c[1])
-
-                if a > b:
+                # maintain order or invert it
+                if a > b:  
                     cleaned_up_path = path_cont[b : a]       
                     cleaned_up_path.reverse()
                 else:
@@ -203,17 +203,19 @@ class reference(object):
         path_sorted = [ path_unsorted.pop(0) ] # initialize sorted path with first contour
         pcurr  = path_sorted[-1][-1] 
         
-        while len(path_unsorted)>0:
+        # odering found segments
+        while len(path_unsorted)>0: # remove segment from list once ordered
             sorted = False
             for ii in range(len(path_unsorted)):
                 index = ii
+                # detects continuity in path
                 if np.linalg.norm(np.array(path_unsorted[ii][0]) - np.array(pcurr), axis=1) < 20:
-                    #comparison between the 
                     path_sorted.append(path_unsorted.pop(index))
                     sorted = True
                     break
 
             if sorted: index = index - 1
+            # detects backtracking
             if np.linalg.norm(np.array(path_unsorted[index][0]) - np.array(pcurr), axis=1) > 200:
                 add_on = path_unsorted.pop(index).copy()
                 add_on.reverse()
@@ -228,14 +230,14 @@ class reference(object):
         path_y = []
         path_roll = []
 
-        for line in path_sorted:
+        for line in path_sorted: # sampling of 150
             x,y  = np.array(line).T
             x = x.T.flatten()
             last_x = x[-1]
-            x = x[:-1:200]
+            x = x[:-1:150]
             y = y.T.flatten()
             last_y = y[-1]
-            y =y[:-1:200]
+            y =y[:-1:150]
             x = np.append(x, last_x)
             y = np.append(y, last_y)
 
@@ -313,7 +315,7 @@ class reference(object):
     """ reduze the number of points to be drawn """
     """ considering  
         - if is a straight line - only the start/end point need to be represented
-        - if is a curve line, consider each point based on a tresh angle between 2 points of the curve """
+        - if is a curve line, consider each point based on a treshold angle between 2 points of the curve """
     def sampling(self, x, y):
         x_new = []
         y_new = []

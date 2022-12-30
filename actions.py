@@ -40,26 +40,24 @@ class action(object):
     def __init__(self):
         self.ser = serial.Serial('COM4', baudrate=9600, bytesize=8, timeout=2, parity='N', xonxoff=0, stopbits=serial.STOPBITS_ONE)
         self.ser.flush()
-        # erase memory
-        # home position
 
-    """ calibrate the robot by reading the original position of the pen transform into cartesian coordinates """
+
+    """ calibrate the robot by reading the original position of the pen and saving its coordinates """
     def manual_calibrate(self):
         position = self.ser.write(bytes("LISTPV POSITION\r", "Ascii"))
         self.ser.readline() # discard
         self.ser.readline() # discard
         position_string = self.ser.readline() # read cartesian coordinates
         output = position_string.decode("Ascii")
-        print(output)
         ref = []
 
-        coordinates = re.findall(r"[-+]?(?:\d*\.*\d+)", output)        
+        coordinates = re.findall(r"[-+]?(?:\d*\.*\d+)", output) # finds int variables
         for ii in range(len(coordinates)):
             ref.append(int(coordinates[ii]))
 
         return ref
 
-    """ initialize the robot """
+    """ initialize the robot - from home to a safe position """
     def initialize(self, home = False):
         if home:
             self.ser.write(bytes("HOME\r", "Ascii")), read_and_wait(self.ser,2)
@@ -81,9 +79,8 @@ class action(object):
 
         return origin
 
-    """ adjust points to robot's referencial """
+    """ adjust points to robot's origin """
     def init_points(self,origin,path):
-        print('Adjusting to the r')
         _,coord = path.shape
         for i in range(coord):
             path[:,i] = path[:,i] + origin[i] 
@@ -91,13 +88,12 @@ class action(object):
     """ create vector with all the points to draw """
     def create_path (self,path,roll):
         n_points,_ = path.shape
-        print("n_points dentro create path")
         if roll:
-            n_points = n_points*2 + 1 #includes lifting 44
+            n_points = n_points*2 + 1 # for roll coordinates has double the points plus one for lifting pen
         else: 
-            n_points = n_points + 1
+            n_points = n_points + 1 # plus one for lifting pen
 
-        self.ser.write(bytes("DIMP PATH[" + str(n_points) + "]\r", "Ascii")), read_and_wait(self.ser,2)
+        self.ser.write(bytes("DIMP PATH[" + str(n_points) + "]\r", "Ascii")), read_and_wait(self.ser,2) # defines vector
   
     """ sets values to the coordinates of a point """
     """ without roll's coordinates"""
@@ -135,24 +131,22 @@ class action(object):
     """ without roll's coordinates"""
     def move_path (self, points):
         points = points + 1 # all the points + lift pen
-        exc_time = points * 0.8 * 100 # 0.7 seconds per point
+        exc_time = points * 0.8 * 100 # average time per point
         exc_time = np.ceil(exc_time)
         exc_time_int = exc_time.astype(np.int32)
         self.ser.write(bytes("MOVES PATH 1 " + str(points) + " " + str(exc_time_int) + "\r","Ascii")), read_and_wait(self.ser,2)
         exc_time = exc_time / 100
         time.sleep(exc_time)
-        print("after wait")
 
     """ with roll's coordinates """
     def move_path_roll (self, points):
         points = points*2 + 1 # all the points x 2 (bc first set the roll and then move) + lift pen
-        exc_time = points * 0.8 * 100 # 0.7 seconds per point
+        exc_time = points * 0.8 * 100 # average time per point
         exc_time = np.ceil(exc_time)
-        for i in range(1, points):
+        for i in range(1, points): # move to point one by one
             self.ser.write(bytes("MOVE PATH [" + str(i) + "]\r","Ascii")), read_and_wait(self.ser,2)
         exc_time = exc_time / 100
         time.sleep(exc_time)
-        print("after wait")
 
     """ disconnect the robot and delete the used variables """
     def disconnect(self):
