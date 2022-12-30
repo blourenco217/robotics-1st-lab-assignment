@@ -2,6 +2,21 @@
 Solution to the Laboratory Assignment 1 submitted in partial fulfillment of the requirements for the course in Robotics 2022/2023 at Instituto Superior Técnico - Lisbon University.
 
 # Abstract
+The development of the project is explained in this paper, which is based on solving a drawing task on a robotic arm with 5 rotational degrees of freedom (DOF), Scorbot ER-7, while demonstrating the importance of kinematic models. 
+The goal of this project is to have the robot, which is grabbing a marker, draw an input image over a flat paper surface. 
+
+By taking an image of a one-line black-and-white drawing, it is expected to select a set of points that the marker must touch. In order to do so, various image processing techniques are used such as thinning, finding of key points, and sampling. Next, the coordinates are fed to the robot and saved using the appropriate commands. Finally, it is expected that the robot draws the reference image, as accurately as possible. 
+       
+While developing the project, we reached a set of parameters. These are tuned in order to achieve the desired drawing, such decisions are described thoroughly. Additionally, besides only drawing the line, we implemented another feature, where the gripper rolls along the trajectory.
+       
+The robot was programmed using Python3 with the serial library and connected to a computer through a USB cable. The image processing and trajectory planning were also performed in Python, and the connection with the robot was ensured through the wait time to read each command.
+
+Overall, the Scorbot ER-7 demonstrates strong potential as a drawing robot. However, the robot's memory could be compromised by too complex images that require heavy sampling.
+The robot's performance is evaluated in terms of accuracy and speed and was found to be generally on par with other similar robots.
+
+# Keywords 
+Scorbot ER-7, Serial Manipulator, Image Processing, One line drawing
+
 
 # Instructions
 ## Execution Guidelines
