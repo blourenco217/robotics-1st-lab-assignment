@@ -14,8 +14,19 @@ The robot was programmed using Python3 with the serial library and connected to 
 Overall, the Scorbot ER-7 demonstrates strong potential as a drawing robot. However, the robot's memory could be compromised by too complex images that require heavy sampling.
 The robot's performance is evaluated in terms of accuracy and speed and was found to be generally on par with other similar robots.
 
-# Keywords 
+## Keywords 
 Scorbot ER-7, Serial Manipulator, Image Processing, One line drawing
+
+# Code organization
+
+The code in this repository is organized into the following directories and files:
+
+The current directory contains the source code for the robot.
+  - `main.py`: The main entry point for the program.
+  - `trajectory_planning.py`: A module containing functions for image processing and planning the robot's trajectory.
+  - `actions.py`: A module containing functions for ordering the robot's movements and processes.
+  - `serial_ports.py`: To test in which port the Scorbot -ER7 is detected.
+
 
 
 # Instructions
@@ -55,3 +66,4 @@ The following is a representation of the robot's planned trajectory from one of 
 ## SCORBOT-ER7 Movement
 
 ![](outputs/robot_movement.gif)
+
